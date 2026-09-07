@@ -32,6 +32,8 @@
             padding: 24px;
             display: flex;
             justify-content: center;
+            min-width: 320px;
+            overflow-x: hidden;
         }
 
         .app-wrapper {
@@ -93,6 +95,14 @@
 
         .market-controls .btn-primary {
             white-space: nowrap;
+        }
+
+        .market-status {
+            display: block;
+            min-height: 1em;
+            margin-top: -8px;
+            color: var(--text-muted);
+            font-size: 0.62rem;
         }
 
         .brand-title h1 {
@@ -180,12 +190,14 @@
             display: grid;
             grid-template-columns: 2.2fr 1fr;
             gap: 20px;
+            min-width: 0;
         }
 
         .left-column, .right-column {
             display: flex;
             flex-direction: column;
             gap: 20px;
+            min-width: 0;
         }
 
         .panel {
@@ -994,6 +1006,14 @@
         }
 
         @media (max-width: 900px) {
+            body {
+                padding: 14px;
+            }
+
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+
             .top-bar {
                 align-items: stretch;
                 flex-direction: column;
@@ -1018,6 +1038,49 @@
 
             .past-data-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
+
+            .app-wrapper {
+                gap: 12px;
+            }
+
+            .top-bar,
+            .panel {
+                padding: 14px;
+            }
+
+            .price-hero {
+                font-size: clamp(2.2rem, 12vw, 3.5rem);
+            }
+
+            .market-controls,
+            .trade-settings {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .market-controls .btn-primary {
+                width: 100%;
+            }
+
+            .strategy-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bar > div:last-child {
+                flex-wrap: wrap;
+                gap: 8px !important;
             }
         }
     </style>
@@ -1102,16 +1165,11 @@
             <div class="panel">
                 <div class="market-controls">
                     <select id="market-select" onchange="changeMarket()">
-                        <option value="R_25">Volatility 25 Index</option>
-                        <option value="R_10">Volatility 10 Index</option>
-                        <option value="R_50">Volatility 50 Index</option>
-                        <option value="R_75">Volatility 75 Index</option>
-                        <option value="R_100">Volatility 100 Index</option>
-                        <option value="1HZ10V">Volatility 10 (1s) Index</option>
-                        <option value="1HZ75V">Volatility 75 (1s) Index</option>
+                        <option value="R_25">Loading derived markets...</option>
                     </select>
                     <button id="analysis-button" class="btn-primary" onclick="toggleEngine()">START ANALYSIS</button>
                 </div>
+                <span id="market-status" class="market-status">Connecting to Deriv market directory...</span>
                 <div class="panel-label">⚡ Market Signals</div>
                 <div id="selected-method" class="selected-method">ACTIVE METHOD: EVEN / ODD</div>
                 <div class="strategy-grid">
@@ -1303,7 +1361,8 @@
 
 <script>
     const API_BASE = 'https://api.derivws.com';
-    const PUBLIC_WS = 'wss://api.derivws.com/trading/v1/options/ws/public';
+    const DEFAULT_PUBLIC_APP_ID = '1089';
+    const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
     let ws = null;
     let tickHistory = [];
     let currentSymbol = 'R_25';
@@ -1335,6 +1394,8 @@
     let lossStreak = 0;
     let lastTradeAt = 0;
     let emergencyStopped = false;
+    let derivedMarkets = [];
+    let marketDirectorySocket = null;
 
     // Render Initial Grid Framework
     function initDigitGrid() {
@@ -1366,7 +1427,67 @@
     function changeMarket() {
         currentSymbol = document.getElementById('market-select').value;
         tickHistory = [];
+        sessionTickCount = 0;
+        renderPastData();
+        setHint(`Selected ${currentSymbol}. Waiting for live Deriv ticks...`);
         if (isAnalyzing) connectWebSocket();
+    }
+
+    function getPublicWebSocketUrl() {
+        const appId = authAppId || DEFAULT_PUBLIC_APP_ID;
+        return `${PUBLIC_WS_BASE}?app_id=${encodeURIComponent(appId)}`;
+    }
+
+    function loadDerivedMarkets() {
+        if (marketDirectorySocket) marketDirectorySocket.close();
+        marketDirectorySocket = new WebSocket(getPublicWebSocketUrl());
+        marketDirectorySocket.onopen = () => marketDirectorySocket.send(JSON.stringify({
+            active_symbols: 'brief',
+            req_id: 10
+        }));
+        marketDirectorySocket.onmessage = event => {
+            const data = JSON.parse(event.data);
+            if (data.error) {
+                setMarketStatus(`Market directory error: ${data.error.message}`);
+                return;
+            }
+            if (data.msg_type !== 'active_symbols') return;
+            const symbols = data.active_symbols.filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
+            if (!symbols.length) {
+                setMarketStatus('Deriv returned no open derived markets. Retrying...');
+                window.setTimeout(loadDerivedMarkets, 10000);
+                return;
+            }
+            derivedMarkets = symbols.sort((first, second) => `${first.submarket}${first.display_name}`.localeCompare(`${second.submarket}${second.display_name}`));
+            renderMarketOptions();
+            marketDirectorySocket.close();
+        };
+        marketDirectorySocket.onerror = () => setMarketStatus('Unable to load Deriv markets. Retrying...');
+    }
+
+    function setMarketStatus(message) {
+        const status = document.getElementById('market-status');
+        if (status) status.innerText = message;
+    }
+
+    function renderMarketOptions() {
+        const select = document.getElementById('market-select');
+        const previousSymbol = currentSymbol;
+        select.innerHTML = '';
+        const groups = new Map();
+        derivedMarkets.forEach(symbol => {
+            const groupName = symbol.submarket || 'Derived';
+            if (!groups.has(groupName)) groups.set(groupName, document.createElement('optgroup'));
+            const option = document.createElement('option');
+            option.value = symbol.symbol;
+            option.textContent = symbol.display_name || symbol.symbol;
+            groups.get(groupName).label = groupName.toUpperCase();
+            groups.get(groupName).appendChild(option);
+        });
+        groups.forEach(group => select.appendChild(group));
+        if (!derivedMarkets.some(symbol => symbol.symbol === previousSymbol)) currentSymbol = derivedMarkets[0]?.symbol || previousSymbol;
+        select.value = currentSymbol;
+        setMarketStatus(`${derivedMarkets.length} derived markets available from Deriv`);
     }
 
     function selectMethod(method, button) {
@@ -1518,7 +1639,7 @@
             currency: 'USD',
             duration: settings.duration,
             duration_unit: 't',
-            symbol: currentSymbol
+            underlying_symbol: currentSymbol
         };
         if (['DIGITOVER', 'DIGITUNDER'].includes(settings.contractType)) {
             proposal.barrier = settings.barrier;
@@ -1632,12 +1753,17 @@
 
     function connectWebSocket() {
         if (ws) ws.close();
-        ws = new WebSocket(PUBLIC_WS);
+        const connection = new WebSocket(getPublicWebSocketUrl());
+        ws = connection;
 
-        ws.onopen = () => {
+        connection.onopen = () => {
             reconnectAttempts = 0;
             document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
-            ws.send(JSON.stringify({
+            connection.send(JSON.stringify({
+                active_symbols: 'brief',
+                req_id: 10
+            }));
+            connection.send(JSON.stringify({
                 ticks_history: currentSymbol,
                 adjust_start_time: 1,
                 count: tickMemory,
@@ -1649,10 +1775,20 @@
             setHint(`Connected to ${currentSymbol}. Waiting for market ticks...`);
         };
 
-        ws.onmessage = (event) => {
+        connection.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.error) {
                 setHint(`API ERROR: ${data.error.message}`);
+                return;
+            }
+            if (data.msg_type === 'active_symbols') {
+                const symbols = data.active_symbols.filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
+                if (symbols.length && !derivedMarkets.length) {
+                    derivedMarkets = symbols;
+                    renderMarketOptions();
+                } else if (!symbols.length) {
+                    setMarketStatus('Deriv returned no open derived markets. Check the connection and retry.');
+                }
                 return;
             }
             if (data.msg_type === 'history') {
@@ -1666,11 +1802,12 @@
             }
         };
 
-        ws.onerror = () => {
+        connection.onerror = () => {
             setHint('API ERROR: Unable to reach Deriv market data.');
         };
 
-        ws.onclose = () => {
+        connection.onclose = () => {
+            if (ws !== connection) return;
             if (isAnalyzing && reconnectAttempts < 5) {
                 reconnectAttempts++;
                 setHint(`Market connection lost. Reconnecting (${reconnectAttempts}/5)...`);
@@ -1702,7 +1839,8 @@
         digits.forEach(d => counts[d]++);
         const recentDigits = digits.slice(-10);
         const sequence = recentDigits.join('') || '---';
-        document.getElementById('digit-sequence').innerText = sequence;
+        const sequenceDisplay = document.getElementById('digit-sequence');
+        if (sequenceDisplay) sequenceDisplay.innerText = sequence;
         const lastParity = digits[digits.length - 1] % 2;
         let streak = 0;
         for (let index = digits.length - 1; index >= 0 && digits[index] % 2 === lastParity; index--) streak++;
@@ -1924,7 +2062,7 @@
 
         apiWs.onopen = () => {
             isAuthorized = true;
-            status.innerText = 'CONNECTED';
+            status.innerText = 'CONNECTED: TRADING SESSION READY';
             status.style.color = 'var(--accent-green)';
             const account = accountList.find(item => (item.account_id || item.id || item.loginid) === accountId);
             if (account) setAccountDisplay({ loginid: accountId, is_virtual: account.is_virtual || account.account_type === 'demo' });
@@ -1939,10 +2077,22 @@
             if (data.error) {
                 tradeInFlight = false;
                 const errorMessage = data.error.message || 'Authorization rejected';
+                const failedTrade = tradeHistory.find(trade => trade.id === pendingTradeRecordId);
+                if (failedTrade) {
+                    failedTrade.status = 'BLOCKED';
+                    failedTrade.detail = errorMessage;
+                    pendingTradeRecordId = null;
+                    updateTradeStats();
+                }
+                pendingProposal = null;
+                document.getElementById('confirm-trade').style.display = 'none';
                 status.innerText = errorMessage.toLowerCase().includes('token is invalid')
                     ? `ERROR: Deriv rejected this token (${token.length} characters). Use the token value itself from Deriv's API token page, not an app ID, OAuth code, or label.`
                     : `ERROR: ${errorMessage}`;
                 status.style.color = 'var(--accent-red)';
+                setTradeEvent(`Deriv rejected the request: ${errorMessage}`);
+                setHint(`TRADE BLOCKED BY DERIV: ${errorMessage}`);
+                if (/authorize|token|permission|authentication/i.test(errorMessage)) isAuthorized = false;
                 return;
             }
             if (data.msg_type === 'authorize') {
@@ -2096,6 +2246,7 @@
 
     // Initialize layout
     initDigitGrid();
+    loadDerivedMarkets();
     updateMethodPresentation();
     updateTradeCount();
     updateTradeStats();
