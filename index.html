@@ -889,6 +889,40 @@
             margin-top: 12px;
         }
 
+        .engine-config-panel {
+            border-color: #202a3a;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+        }
+
+        .engine-config-heading {
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .engine-config-heading::after {
+            content: "RISK CONTROL";
+            color: var(--accent-gold);
+            font-size: 0.56rem;
+            letter-spacing: 1px;
+        }
+
+        .config-row {
+            min-height: 38px;
+            align-items: center;
+        }
+
+        .config-row > span:first-child {
+            font-weight: 700;
+        }
+
+        .config-section-label {
+            margin: 16px 0 4px;
+            color: var(--accent-gold);
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
         .trade-settings label {
             color: var(--text-muted);
             font-size: 0.62rem;
@@ -897,6 +931,23 @@
 
         .trade-settings label.hidden {
             display: none;
+        }
+
+        .prediction-field {
+            grid-column: span 2;
+        }
+
+        .prediction-field input {
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .field-help {
+            display: block;
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 0.56rem;
+            line-height: 1.35;
         }
 
         .memory-control {
@@ -1567,8 +1618,8 @@
         <!-- Right Side Controls & Log -->
         <div class="right-column">
             <!-- Engine Config -->
-            <div class="panel">
-                <div class="panel-label">⚙ Engine Config</div>
+            <div class="panel engine-config-panel">
+                <div class="panel-label engine-config-heading">⚙ Engine Config</div>
                 <div class="config-row">
                     <span style="color: var(--text-muted);">Tick Memory</span>
                     <label class="memory-control">
@@ -1608,9 +1659,10 @@
                     Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
                     <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
                 </div>
+                <div class="config-section-label">CONTRACT PARAMETERS</div>
                 <div class="trade-settings">
                     <label id="contract-field">CONTRACT
-                        <select id="contract-type">
+                        <select id="contract-type" onchange="updateTradeParameterFields()">
                             <option value="DIGITEVEN">Even</option>
                             <option value="DIGITODD">Odd</option>
                             <option value="DIGITOVER">Over</option>
@@ -1630,6 +1682,10 @@
                     </label>
                     <label id="duration-field">DURATION
                         <input id="trade-duration" type="number" min="1" max="10" step="1" value="1" inputmode="numeric">
+                    </label>
+                    <label id="prediction-field" class="prediction-field hidden">LAST DIGIT PREDICTION
+                        <input id="trade-prediction" type="number" min="0" max="9" step="1" value="0" inputmode="numeric" aria-describedby="prediction-help" onchange="renderPastData()">
+                        <span id="prediction-help" class="field-help">Required for Matches and Differs contracts.</span>
                     </label>
                 </div>
                 <label class="risk-check">
@@ -1742,6 +1798,8 @@
     let authAppId = '';
     let sessionTickCount = 0;
     let lastTickAt = 0;
+    let lastTickPrice = null;
+    let tickVelocity = 0;
     let sessionStartedAt = Date.now();
     let sessionTimer = null;
     let tickMemory = 200;
@@ -1808,6 +1866,9 @@
         currentSymbol = document.getElementById('market-select').value;
         tickHistory = [];
         sessionTickCount = 0;
+        lastTickAt = 0;
+        lastTickPrice = null;
+        tickVelocity = 0;
         renderPastData();
         setHint(`Selected ${currentSymbol}. Waiting for live Deriv ticks...`);
         if (isAnalyzing) connectWebSocket();
@@ -1989,7 +2050,16 @@
         document.getElementById('contract-type').value = presentation.contract;
         document.getElementById('barrier-field').classList.toggle('hidden', selectedMethod !== 'over-under');
         document.getElementById('contract-field').classList.toggle('hidden', selectedMethod === 'even-odd' || selectedMethod === 'over-under' || selectedMethod === 'match-differ' || selectedMethod === 'rise-fall' || selectedMethod === 'accum');
+        updateTradeParameterFields();
         updateWatchedTarget();
+    }
+
+    function updateTradeParameterFields() {
+        const contractType = document.getElementById('contract-type').value;
+        const predictionField = document.getElementById('prediction-field');
+        const requiresPrediction = ['DIGITMATCH', 'DIGITDIFF'].includes(contractType);
+        predictionField.classList.toggle('hidden', !requiresPrediction);
+        document.getElementById('trade-prediction').setAttribute('aria-required', requiresPrediction ? 'true' : 'false');
     }
 
     function setTickMemory(value) {
@@ -2099,7 +2169,8 @@
             contractType: document.getElementById('contract-type').value,
             barrier: Number.parseInt(document.getElementById('trade-barrier').value, 10),
             stake: Number.parseFloat(document.getElementById('trade-stake').value),
-            duration: Number.parseInt(document.getElementById('trade-duration').value, 10)
+            duration: Number.parseInt(document.getElementById('trade-duration').value, 10),
+            prediction: Number.parseInt(document.getElementById('trade-prediction').value, 10)
         };
     }
 
@@ -2124,6 +2195,7 @@
             lockTradingForLossStreak();
             return 'Maximum loss streak reached. Reset the loss lock before trading again.';
         }
+        if (['DIGITMATCH', 'DIGITDIFF'].includes(settings.contractType) && (!Number.isInteger(settings.prediction) || settings.prediction < 0 || settings.prediction > 9)) return 'Last Digit Prediction must be an integer from 0 to 9.';
         if (!document.getElementById('risk-confirm').checked) return 'Confirm the real-money risk acknowledgement first.';
         if (!Number.isFinite(settings.stake) || settings.stake < 0.35) return 'Stake must be at least 0.35.';
         if (!Number.isInteger(settings.duration) || settings.duration < 1 || settings.duration > 10) return 'Duration must be between 1 and 10 ticks.';
@@ -2133,6 +2205,10 @@
     }
 
     function requestTradeProposal(isAutomatic) {
+        if (isAutomatic && !canPlaceAutomaticTrade()) {
+            stopAutoTrading(`Automatic trading stopped after reaching the ${autoTradeLimit}-trade limit.`);
+            return;
+        }
         const error = validateTradeSettings();
         if (error) {
             addTradeRecord({ status: 'BLOCKED', detail: error, method: isAutomatic ? 'AUTOMATIC' : 'MANUAL' });
@@ -2140,10 +2216,6 @@
         }
         if (tradeInFlight) {
             addTradeRecord({ status: 'BLOCKED', detail: 'Another proposal is already in progress.', method: isAutomatic ? 'AUTOMATIC' : 'MANUAL' });
-            return;
-        }
-        if (isAutomatic && !canPlaceAutomaticTrade()) {
-            addTradeRecord({ status: 'BLOCKED', detail: 'Automatic trade limit reached.', method: 'AUTOMATIC' });
             return;
         }
         const settings = getTradeSettings();
@@ -2160,6 +2232,9 @@
         };
         if (['DIGITOVER', 'DIGITUNDER'].includes(settings.contractType)) {
             proposal.barrier = settings.barrier;
+        }
+        if (['DIGITMATCH', 'DIGITDIFF'].includes(settings.contractType)) {
+            proposal.prediction = settings.prediction;
         }
         apiWs.send(JSON.stringify(proposal));
         apiWs.pendingAutomaticTrade = isAutomatic;
@@ -2221,15 +2296,18 @@
     }
 
     function updateTradeStats() {
-        const settled = tradeHistory.filter(trade => trade.status !== 'OPEN');
-        const wins = settled.filter(trade => trade.profit > 0).length;
-        const profit = tradeHistory.reduce((total, trade) => total + trade.profit, 0);
-        document.getElementById('win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : 'NO SETTLED TRADES';
+        const completed = tradeHistory.filter(trade => ['WON', 'LOST'].includes(String(trade.status).toUpperCase()));
+        const wins = completed.filter(trade => String(trade.status).toUpperCase() === 'WON').length;
+        const losses = completed.filter(trade => String(trade.status).toUpperCase() === 'LOST').length;
+        const profit = completed.reduce((total, trade) => total + trade.profit, 0);
         document.getElementById('net-profit').innerText = `${profit.toFixed(2)} USD`;
-        document.getElementById('history-win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : 'NO SETTLED TRADES';
+        const completedTotal = wins + losses;
+        const winRate = completedTotal ? `${((wins / completedTotal) * 100).toFixed(0)}%` : 'NO COMPLETED TRADES';
+        document.getElementById('win-rate').innerText = winRate;
+        document.getElementById('history-win-rate').innerText = winRate;
         document.getElementById('history-profit').innerText = `${profit.toFixed(2)} USD`;
         document.getElementById('history-wins').innerText = wins;
-        document.getElementById('history-losses').innerText = settled.filter(trade => trade.profit < 0).length;
+        document.getElementById('history-losses').innerText = losses;
         document.getElementById('history-total').innerText = `(${tradeHistory.length})`;
         renderTradeHistory();
     }
@@ -2344,7 +2422,7 @@
                 if (tickHistory.length) {
                     document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
                     setMarketStatus(`Live data connected to ${currentSymbol}`);
-                    processData();
+                    processData(undefined, data.history.times?.[data.history.times.length - 1]);
                     if (!marketPollingTimer) {
                         marketPollingTimer = window.setInterval(() => {
                             if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({
@@ -2363,7 +2441,7 @@
                 tickHistory.push(data.tick.quote);
                 if (tickHistory.length > tickMemory) tickHistory.shift();
                 sessionTickCount++;
-                processData(data.tick.quote);
+                processData(data.tick.quote, data.tick.epoch);
             }
         };
 
@@ -2391,7 +2469,16 @@
         };
     }
 
-    function processData(latestPrice) {
+    function updateTickVelocity(tickTimestamp) {
+        const currentTimestamp = Number(tickTimestamp) || Math.floor(Date.now() / 1000);
+        if (lastTickAt > 0 && currentTimestamp > lastTickAt) {
+            tickVelocity = 1 / (currentTimestamp - lastTickAt);
+        }
+        lastTickAt = currentTimestamp;
+        document.getElementById('tick-speed').innerText = `${tickVelocity.toFixed(1)} / sec`;
+    }
+
+    function processData(latestPrice, tickTimestamp) {
         if (!tickHistory.length) return;
 
         if (isAnalyzing) {
@@ -2401,6 +2488,7 @@
         }
 
         const currentPrice = latestPrice || tickHistory[tickHistory.length - 1];
+        updateTickVelocity(tickTimestamp);
         const priceText = String(currentPrice);
         const previousPrice = tickHistory.length > 1 ? Number(tickHistory[tickHistory.length - 2]) : Number(currentPrice);
         const priceDelta = Number(currentPrice) - previousPrice;
@@ -2411,8 +2499,6 @@
             ? `${priceText.slice(0, -1)}<span class="active-price-digit">${priceText.slice(-1)}</span>`
             : `<span class="active-price-digit">${priceText}</span>`;
         document.getElementById('datapoints-badge').innerText = `DATA POINTS: ${tickHistory.length}`;
-        const elapsedSeconds = Math.max(1, (Date.now() - sessionStartedAt) / 1000);
-        document.getElementById('tick-speed').innerText = `${(sessionTickCount / elapsedSeconds).toFixed(1)} / sec`;
 
         // Compute Digit Distribution
         const digits = tickHistory.map(p => parseInt(p.toString().slice(-1)));
@@ -2564,6 +2650,7 @@
         const odd = digits.length - even;
         const over = digits.filter(digit => digit >= 5).length;
         const recent = digits.slice(-20);
+        const matchHistoryDigits = digits.slice(-30);
         const lastDigit = recent[recent.length - 1];
         let streak = 0;
         for (let index = recent.length - 1; index >= 0 && recent[index] === lastDigit; index--) streak++;
@@ -2576,7 +2663,12 @@
         const data = {
             'even-odd': ['EVEN', `${even} (${((even / digits.length) * 100).toFixed(0)}%)`, 'ODD', `${odd} (${((odd / digits.length) * 100).toFixed(0)}%)`, 'LAST STREAK', `${streak} ${lastDigit % 2 ? 'ODD' : 'EVEN'}`],
             'over-under': ['OVER 5', `${over} (${((over / digits.length) * 100).toFixed(0)}%)`, 'UNDER 5', `${digits.length - over} (${(((digits.length - over) / digits.length) * 100).toFixed(0)}%)`, 'BARRIER', document.getElementById('trade-barrier').value],
-            'match-differ': ['MATCHES', `${recent.filter(digit => digit === lastDigit).length}`, 'DIFFERS', `${recent.filter(digit => digit !== lastDigit).length}`, 'LAST DIGIT', lastDigit],
+            'match-differ': (() => {
+                const prediction = Number.parseInt(document.getElementById('trade-prediction').value, 10);
+                const selectedPrediction = Number.isInteger(prediction) && prediction >= 0 && prediction <= 9 ? prediction : lastDigit;
+                const matches = matchHistoryDigits.filter(digit => digit === selectedPrediction).length;
+                return ['MATCHES', `${matches}`, 'DIFFERS', `${matchHistoryDigits.length - matches}`, 'PREDICTION', selectedPrediction];
+            })(),
             'rise-fall': ['RISES', `${rises}`, 'FALLS', `${falls}`, 'DIRECTION', rises >= falls ? 'RISE' : 'FALL'],
             'accum': ['RANGE', `${range.toFixed(3)}`, 'RANGE %', `${rangePct}%`, 'ACTIVITY', Number(rangePct) >= 0.1 ? 'ACTIVE' : 'CALM']
         }[selectedMethod];
@@ -2591,7 +2683,11 @@
         const recentDigits = digits.slice(-30);
         if (selectedMethod === 'even-odd') return recentDigits.map(digit => ({ value: digit, type: digit % 2 ? 'odd' : 'even', title: digit % 2 ? 'Odd' : 'Even' }));
         if (selectedMethod === 'over-under') return recentDigits.map(digit => ({ value: digit >= Number(barrier) ? 'O' : 'U', type: digit >= Number(barrier) ? 'over' : 'under', title: `${digit} ${digit >= Number(barrier) ? 'over' : 'under'} barrier ${barrier}` }));
-        if (selectedMethod === 'match-differ') return recentDigits.map((digit, index) => ({ value: index && digit === recentDigits[index - 1] ? 'M' : 'D', type: index && digit === recentDigits[index - 1] ? 'match' : 'differ', title: index && digit === recentDigits[index - 1] ? 'Match with previous digit' : 'Different from previous digit' }));
+        if (selectedMethod === 'match-differ') {
+            const prediction = Number.parseInt(document.getElementById('trade-prediction').value, 10);
+            const selectedPrediction = Number.isInteger(prediction) && prediction >= 0 && prediction <= 9 ? prediction : recentDigits[recentDigits.length - 1];
+            return recentDigits.map(digit => ({ value: digit === selectedPrediction ? 'M' : 'D', type: digit === selectedPrediction ? 'match' : 'differ', title: `${digit} ${digit === selectedPrediction ? 'matches' : 'differs from'} prediction ${selectedPrediction}` }));
+        }
         if (selectedMethod === 'rise-fall') return prices.slice(-30).map((price, index, values) => ({ value: index && price >= values[index - 1] ? 'R' : 'F', type: index && price >= values[index - 1] ? 'rise' : 'fall', title: index && price >= values[index - 1] ? 'Price rose' : 'Price fell' }));
         return prices.slice(-30).map((price, index, values) => ({ value: index && Math.abs(price - values[index - 1]) > 0 ? 'A' : 'C', type: index && Math.abs(price - values[index - 1]) > 0 ? 'active' : 'calm', title: index && Math.abs(price - values[index - 1]) > 0 ? 'Price moved' : 'Price unchanged' }));
     }
