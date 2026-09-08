@@ -554,20 +554,58 @@
 
         /* Circular Signal Gauge */
         .signal-gauge {
+            --signal-progress: 0deg;
             width: 130px;
             height: 130px;
             border-radius: 50%;
-            border: 2px dashed var(--panel-border);
+            background: conic-gradient(var(--signal-color, #334155) var(--signal-progress), #18212e 0deg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+        }
+
+        .signal-gauge::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+        }
+
+        .signal-gauge > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .signal-gauge.high {
+            --signal-color: #10b981;
+            box-shadow: 0 0 22px rgba(16, 185, 129, 0.28);
+        }
+
+        .signal-gauge.medium {
+            --signal-color: #f59e0b;
+        }
+
+        .signal-gauge.low {
+            --signal-color: #ef4444;
+        }
+
+        .signal-gauge.pulse {
+            animation: signal-pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes signal-pulse {
+            50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.48); }
         }
 
         .signal-gauge .gauge-value {
             font-size: 2rem;
             font-weight: 800;
+            transition: color 0.3s ease;
         }
 
         .signal-gauge .gauge-sub {
@@ -827,30 +865,6 @@
             margin-bottom: 3px;
         }
 
-        .risk-settings {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .risk-settings label {
-            color: var(--text-muted);
-            font-size: 0.62rem;
-            font-weight: 700;
-        }
-
-        .risk-settings input {
-            width: 100%;
-            margin-top: 4px;
-            padding: 7px;
-            background: var(--card-inner);
-            border: 1px solid var(--panel-border);
-            border-radius: 6px;
-            color: var(--text-main);
-            font-size: 0.7rem;
-        }
-
         .prediction-control {
             margin-top: 10px;
         }
@@ -865,8 +879,44 @@
 
         .prediction-control input {
             width: 100%;
-            accent-color: var(--accent-gold);
+            height: 8px;
+            appearance: none;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent-gold), #263244);
             cursor: pointer;
+        }
+
+        .prediction-control input::-webkit-slider-thumb {
+            width: 18px;
+            height: 18px;
+            appearance: none;
+            border: 3px solid var(--panel-bg);
+            border-radius: 50%;
+            background: var(--accent-gold);
+            box-shadow: 0 0 0 1px var(--accent-gold), 0 0 12px rgba(255, 214, 0, 0.45);
+        }
+
+        .prediction-control input::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border: 3px solid var(--panel-bg);
+            border-radius: 50%;
+            background: var(--accent-gold);
+            box-shadow: 0 0 0 1px var(--accent-gold), 0 0 12px rgba(255, 214, 0, 0.45);
+        }
+
+        .prediction-control input:focus-visible {
+            outline: 2px solid rgba(255, 214, 0, 0.5);
+            outline-offset: 5px;
+        }
+
+        .memory-select {
+            min-width: 126px;
+            height: 32px;
+            padding: 6px 28px 6px 10px;
+            border-color: #263244;
+            color: var(--text-main);
+            font-size: 0.68rem;
         }
 
         .danger-button {
@@ -921,6 +971,44 @@
             font-size: 0.58rem;
             font-weight: 800;
             letter-spacing: 1px;
+        }
+
+        .risk-settings {
+            margin-top: 8px;
+            padding: 12px;
+            background: rgba(8, 11, 17, 0.72);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+        }
+
+        .risk-settings label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+        }
+
+        .risk-settings input {
+            height: 32px;
+            margin-top: 6px;
+            padding: 6px 8px;
+            background: var(--card-inner);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.72rem;
+            outline: none;
+        }
+
+        .risk-settings input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px rgba(255, 214, 0, 0.08);
+        }
+
+        .operations-account-select {
+            width: 100%;
+            margin-top: 12px;
         }
 
         .trade-settings label {
@@ -1540,7 +1628,7 @@
                         <span id="watched-value" class="watched-value">WAITING</span>
                     </div>
                 </div>
-                <div class="signal-gauge" style="justify-self: center;">
+                <div id="signal-gauge" class="signal-gauge low" style="justify-self: center;" role="meter" aria-label="Signal strength" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <div id="gauge-val" class="gauge-value">-</div>
                     <div class="gauge-sub">SIGNAL STRENGTH</div>
                 </div>
@@ -1622,11 +1710,13 @@
                 <div class="panel-label engine-config-heading">⚙ Engine Config</div>
                 <div class="config-row">
                     <span style="color: var(--text-muted);">Tick Memory</span>
-                    <label class="memory-control">
-                        <button class="stepper-button" type="button" onclick="adjustTickMemory(-10)" aria-label="Decrease tick memory">-</button>
-                        <input id="tick-memory" type="number" min="20" max="500" step="10" value="200" aria-label="Tick memory in ticks" onchange="setTickMemory(this.value)">
-                        <button class="stepper-button" type="button" onclick="adjustTickMemory(10)" aria-label="Increase tick memory">+</button>
-                        <span>Ticks</span>
+                    <label>
+                        <select id="tick-memory" class="memory-select" aria-label="Tick memory sample size" onchange="setTickMemory(this.value)">
+                            <option value="50">50 Ticks</option>
+                            <option value="100">100 Ticks</option>
+                            <option value="200" selected>200 Ticks (Default)</option>
+                            <option value="500">500 Ticks</option>
+                        </select>
                     </label>
                 </div>
                 <div class="config-row">
@@ -1649,8 +1739,8 @@
                     <span id="confidence-value" class="config-value" aria-live="polite">60%</span>
                 </div>
                 <div class="prediction-control">
-                    <header><span>LOWER</span><span>MORE SELECTIVE</span></header>
-                    <input id="confidence-threshold" type="range" min="50" max="95" value="60" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
+                    <header><span>LOWER</span><span>100% SELECTIVE</span></header>
+                    <input id="confidence-threshold" type="range" min="50" max="100" value="60" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
                 </div>
                 <div id="autotrade-status" class="auto-trade-status" aria-live="polite">AUTO-TRADING OFF</div>
                 <div id="trade-count" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 5px;">TRADES: 0 / 1</div>
@@ -1658,6 +1748,21 @@
                     <strong>MAX LOSS STREAK REACHED</strong><br>
                     Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
                     <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
+                </div>
+                <div class="config-section-label">RISK CONTROL</div>
+                <div class="risk-settings">
+                    <label>STOP LOSS (USD)
+                        <input id="stop-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                    </label>
+                    <label>TAKE PROFIT (USD)
+                        <input id="take-profit" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                    </label>
+                    <label>MAX DAILY LOSS (USD)
+                        <input id="daily-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                    </label>
+                    <label>MAX LOSS STREAK
+                        <input id="loss-streak" type="number" min="1" max="20" step="1" value="3" inputmode="numeric">
+                    </label>
                 </div>
                 <div class="config-section-label">CONTRACT PARAMETERS</div>
                 <div class="trade-settings">
@@ -1734,23 +1839,9 @@
                     <div class="ops-stat"><span>NET P/L</span><strong id="net-profit">0.00 USD</strong></div>
                     <div class="ops-stat"><span>MODEL TEST</span><strong id="backtest-result">NOT RUN</strong></div>
                 </div>
-                <select id="account-select" disabled aria-label="Deriv account selector" onchange="switchAccount(this.value)">
+                <select id="account-select" class="operations-account-select" disabled aria-label="Deriv account selector" onchange="switchAccount(this.value)">
                     <option value="">CONNECT API TO LOAD ACCOUNTS</option>
                 </select>
-                <div class="risk-settings">
-                    <label>STOP LOSS
-                        <input id="stop-loss" type="number" min="0" step="0.01" value="0">
-                    </label>
-                    <label>TAKE PROFIT
-                        <input id="take-profit" type="number" min="0" step="0.01" value="0">
-                    </label>
-                    <label>MAX DAILY LOSS
-                        <input id="daily-loss" type="number" min="0" step="0.01" value="0">
-                    </label>
-                    <label>MAX LOSS STREAK
-                        <input id="loss-streak" type="number" min="1" max="20" step="1" value="3">
-                    </label>
-                </div>
                 <button class="btn-secondary" onclick="runBacktest()">RUN BACKTEST</button>
                 <button class="danger-button" onclick="emergencyStop()">EMERGENCY STOP</button>
             </div>
@@ -1785,6 +1876,13 @@
     let autoTradingEnabled = false;
     let neuralModel = null;
     let neuralTraining = false;
+    let neuralTrainingTimer = null;
+    let lastModelRunAt = 0;
+    let signalStrength = 0;
+    let signalEma = null;
+    const MIN_SIGNAL_SAMPLE = 50;
+    const SIGNAL_EMA_ALPHA = 0.2;
+    const MIN_SIGNAL_FOR_TRADE = 80;
     let isAuthorized = false;
     let pendingProposal = null;
     let tradeInFlight = false;
@@ -1802,7 +1900,7 @@
     let tickVelocity = 0;
     let sessionStartedAt = Date.now();
     let sessionTimer = null;
-    let tickMemory = 200;
+    let maxTickMemory = 200;
     let tradeHistory = [];
     let lossStreak = 0;
     let lossStreakLocked = false;
@@ -1869,6 +1967,8 @@
         lastTickAt = 0;
         lastTickPrice = null;
         tickVelocity = 0;
+        signalEma = null;
+        updateSignalGauge(0, 0);
         renderPastData();
         setHint(`Selected ${currentSymbol}. Waiting for live Deriv ticks...`);
         if (isAnalyzing) connectWebSocket();
@@ -2063,19 +2163,15 @@
     }
 
     function setTickMemory(value) {
-        const nextMemory = Math.min(500, Math.max(20, Math.round((Number.parseInt(value, 10) || 200) / 10) * 10));
-        const changed = nextMemory !== tickMemory;
-        tickMemory = nextMemory;
-        document.getElementById('tick-memory').value = tickMemory;
-        if (tickHistory.length > tickMemory) tickHistory = tickHistory.slice(-tickMemory);
-        if (changed && isAnalyzing) {
-            setHint(`Tick memory set to ${tickMemory}. Refreshing the live history...`);
-            connectWebSocket();
-        }
-    }
-
-    function adjustTickMemory(amount) {
-        setTickMemory(tickMemory + amount);
+        const allowedMemory = [50, 100, 200, 500];
+        const requestedMemory = Number.parseInt(value, 10);
+        maxTickMemory = allowedMemory.includes(requestedMemory) ? requestedMemory : 200;
+        document.getElementById('tick-memory').value = maxTickMemory;
+        tickHistory = tickHistory.slice(-maxTickMemory);
+        signalEma = null;
+        updateSignalGauge(0, tickHistory.length);
+        if (tickHistory.length) processData(tickHistory[tickHistory.length - 1]);
+        setHint(`Tick memory set to ${maxTickMemory} ticks. Live connection preserved.`);
     }
 
     function setTradeLimit(value) {
@@ -2111,9 +2207,33 @@
     }
 
     function setConfidenceThreshold(value) {
-        confidenceThreshold = Math.min(95, Math.max(50, Number.parseInt(value, 10) || 60));
+        confidenceThreshold = Math.min(100, Math.max(50, Number.parseInt(value, 10) || 60));
         document.getElementById('confidence-threshold').value = confidenceThreshold;
         document.getElementById('confidence-value').innerText = `${confidenceThreshold}%`;
+    }
+
+    function updateSignalGauge(value, sampleSize) {
+        const gauge = document.getElementById('signal-gauge');
+        const display = document.getElementById('gauge-val');
+        const bounded = Math.max(0, Math.min(100, value));
+        signalStrength = bounded;
+        gauge.style.setProperty('--signal-progress', `${bounded * 3.6}deg`);
+        gauge.classList.remove('high', 'medium', 'low', 'pulse');
+        gauge.classList.add(bounded >= 80 ? 'high' : bounded >= 50 ? 'medium' : 'low');
+        if (bounded >= 85) gauge.classList.add('pulse');
+        display.innerText = sampleSize < maxTickMemory ? 'WAIT' : `${bounded.toFixed(0)}%`;
+        gauge.setAttribute('aria-valuenow', bounded.toFixed(0));
+        gauge.setAttribute('aria-valuetext', sampleSize < maxTickMemory ? `Gathering ${maxTickMemory - sampleSize} more ticks` : `${bounded.toFixed(0)} percent`);
+    }
+
+    function calculateSignalStrength(digits) {
+        const windowDigits = digits.slice(-maxTickMemory);
+        if (!windowDigits.length) return 0;
+        const counts = Array(10).fill(0);
+        windowDigits.forEach(digit => counts[digit]++);
+        const probability = Math.max(...counts) / windowDigits.length * 100;
+        signalEma = signalEma === null ? probability : signalEma + SIGNAL_EMA_ALPHA * (probability - signalEma);
+        return signalEma;
     }
 
     function updateTradeCount() {
@@ -2187,6 +2307,8 @@
         }
         if (emergencyStopped) return 'Emergency stop is active. Reload the page to reset it.';
         if (lossStreakLocked) return 'Maximum loss streak reached. Reset the loss lock before trading again.';
+        if (tickHistory.length < maxTickMemory) return `Gathering ${maxTickMemory - tickHistory.length} more ticks before trading.`;
+        if (signalStrength < MIN_SIGNAL_FOR_TRADE) return `Signal strength is ${signalStrength.toFixed(0)}%. Trading requires at least ${MIN_SIGNAL_FOR_TRADE}%.`;
         if (Date.now() - lastTradeAt < 3000) return 'Cooldown active. Wait 3 seconds between trades.';
         if (Number.parseFloat(document.getElementById('stop-loss').value) > 0 && netProfit <= -Number.parseFloat(document.getElementById('stop-loss').value)) return 'Stop-loss limit reached.';
         if (Number.parseFloat(document.getElementById('take-profit').value) > 0 && netProfit >= Number.parseFloat(document.getElementById('take-profit').value)) return 'Take-profit limit reached.';
@@ -2234,7 +2356,7 @@
             proposal.barrier = settings.barrier;
         }
         if (['DIGITMATCH', 'DIGITDIFF'].includes(settings.contractType)) {
-            proposal.prediction = settings.prediction;
+            proposal.barrier = String(settings.prediction);
         }
         apiWs.send(JSON.stringify(proposal));
         apiWs.pendingAutomaticTrade = isAutomatic;
@@ -2378,7 +2500,7 @@
             connection.send(JSON.stringify({
                 ticks_history: currentSymbol,
                 adjust_start_time: 1,
-                count: tickMemory,
+                count: maxTickMemory,
                 end: "latest",
                 style: "ticks",
                 req_id: 1
@@ -2418,7 +2540,7 @@
                 return;
             }
             if (data.msg_type === 'history') {
-                tickHistory = data.history.prices;
+                tickHistory = data.history.prices.slice(-maxTickMemory);
                 if (tickHistory.length) {
                     document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
                     setMarketStatus(`Live data connected to ${currentSymbol}`);
@@ -2427,19 +2549,19 @@
                         marketPollingTimer = window.setInterval(() => {
                             if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({
                                 ticks_history: currentSymbol,
-                                count: tickMemory,
+                                count: maxTickMemory,
                                 end: 'latest',
                                 style: 'ticks',
                                 req_id: 1
                             }));
-                        }, 2000);
+                        }, 750);
                     }
                 } else {
                     setPastDataState('error', 'NO HISTORY AVAILABLE', `Deriv returned no ticks for ${currentSymbol}.`);
                 }
             } else if (data.msg_type === 'tick') {
                 tickHistory.push(data.tick.quote);
-                if (tickHistory.length > tickMemory) tickHistory.shift();
+                tickHistory = tickHistory.slice(-maxTickMemory);
                 sessionTickCount++;
                 processData(data.tick.quote, data.tick.epoch);
             }
@@ -2512,15 +2634,12 @@
         let streak = 0;
         for (let index = digits.length - 1; index >= 0 && digits[index] % 2 === lastParity; index--) streak++;
         document.getElementById('streak-counter').innerText = `${streak} ${lastParity === 0 ? 'EVEN' : 'ODD'}`;
-        trainNeuralModel(digits);
+        scheduleNeuralModel(digits);
 
-        let minPct = 100;
-        for (let i = 0; i < 10; i++) minPct = Math.min(minPct, (counts[i] / digits.length) * 100);
         renderPastData(digits);
 
         // Signal Gauge Output
-        const signalStrength = (100 - minPct).toFixed(0);
-        document.getElementById('gauge-val').innerText = `${signalStrength}%`;
+        updateSignalGauge(calculateSignalStrength(digits), digits.length);
 
         updateStrategySignals(digits);
 
@@ -2531,9 +2650,19 @@
         }
     }
 
+    function scheduleNeuralModel(digits) {
+        if (digits.length < MIN_SIGNAL_SAMPLE || neuralTraining || neuralTrainingTimer) return;
+        const wait = Math.max(0, 1000 - (Date.now() - lastModelRunAt));
+        neuralTrainingTimer = window.setTimeout(() => {
+            neuralTrainingTimer = null;
+            trainNeuralModel(digits.slice());
+        }, wait);
+    }
+
     async function trainNeuralModel(digits) {
-        if (neuralTraining || typeof tf === 'undefined' || digits.length < 30) return;
+        if (neuralTraining || typeof tf === 'undefined' || digits.length < MIN_SIGNAL_SAMPLE) return;
         neuralTraining = true;
+        lastModelRunAt = Date.now();
         const inputDigits = 10;
         const samples = digits.length - inputDigits;
         const inputs = [];
@@ -2555,13 +2684,12 @@
             });
             neuralModel.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
         }
-        await neuralModel.fit(inputTensor, outputTensor, { epochs: 3, batchSize: 16, shuffle: true, verbose: 0 });
+        await neuralModel.fit(inputTensor, outputTensor, { epochs: 1, batchSize: 16, shuffle: true, verbose: 0 });
         const prediction = neuralModel.predict(tf.tensor2d([digits.slice(-inputDigits).map(digit => digit / 9)]));
         const probabilities = await prediction.data();
         const predictedDigit = probabilities.indexOf(Math.max(...probabilities));
         const confidence = (probabilities[predictedDigit] * 100).toFixed(0);
         lastModelConfidence = Number(confidence);
-        document.getElementById('gauge-val').innerText = `${confidence}%`;
         if (autoTradingEnabled && lastModelConfidence >= confidenceThreshold) requestTradeProposal(true);
         tf.dispose([inputTensor, outputTensor, prediction]);
         neuralTraining = false;
@@ -2650,7 +2778,7 @@
         const odd = digits.length - even;
         const over = digits.filter(digit => digit >= 5).length;
         const recent = digits.slice(-20);
-        const matchHistoryDigits = digits.slice(-30);
+        const matchHistoryDigits = digits.slice(-maxTickMemory);
         const lastDigit = recent[recent.length - 1];
         let streak = 0;
         for (let index = recent.length - 1; index >= 0 && recent[index] === lastDigit; index--) streak++;
@@ -2680,7 +2808,7 @@
     }
 
     function getMethodSequence(digits, prices, barrier) {
-        const recentDigits = digits.slice(-30);
+        const recentDigits = digits.slice(-maxTickMemory);
         if (selectedMethod === 'even-odd') return recentDigits.map(digit => ({ value: digit, type: digit % 2 ? 'odd' : 'even', title: digit % 2 ? 'Odd' : 'Even' }));
         if (selectedMethod === 'over-under') return recentDigits.map(digit => ({ value: digit >= Number(barrier) ? 'O' : 'U', type: digit >= Number(barrier) ? 'over' : 'under', title: `${digit} ${digit >= Number(barrier) ? 'over' : 'under'} barrier ${barrier}` }));
         if (selectedMethod === 'match-differ') {
