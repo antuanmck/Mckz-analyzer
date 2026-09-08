@@ -105,6 +105,27 @@
             font-size: 0.62rem;
         }
 
+        .market-status.loading,
+        .data-status.loading {
+            color: var(--accent-gold);
+        }
+
+        .market-status.error,
+        .data-status.error {
+            color: var(--accent-red);
+        }
+
+        .market-status.ready,
+        .data-status.ready {
+            color: var(--accent-green);
+        }
+
+        .data-status {
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            font-weight: 700;
+        }
+
         .brand-title h1 {
             font-size: 0.95rem;
             letter-spacing: 1px;
@@ -677,6 +698,18 @@
             text-align: center;
         }
 
+        .memory-control input:focus,
+        .trade-limit-control input:focus {
+            outline: 1px solid var(--accent-gold);
+            outline-offset: 2px;
+        }
+
+        .config-value {
+            color: var(--text-main);
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
         .memory-control input::-webkit-outer-spin-button,
         .memory-control input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -800,6 +833,13 @@
         .toggle-control input:checked + .toggle-slider::before {
             background: var(--accent-green);
             transform: translateX(18px);
+        }
+
+        .toggle-control input:focus-visible + .toggle-slider,
+        .stepper-button:focus-visible,
+        .prediction-control input:focus-visible {
+            outline: 2px solid var(--accent-gold);
+            outline-offset: 2px;
         }
 
         .btn-secondary {
@@ -1120,22 +1160,22 @@
                         <div id="price-delta" class="price-delta" style="color: var(--accent-green);">+0.000</div>
                     </div>
                     <div class="badge-row" style="margin-top: 10px;">
-                        <span id="datapoints-badge" class="pill-badge">DATA POINTS: 0</span>
-                        <span id="status-badge" class="pill-badge status-idle">STATUS: IDLE</span>
+                        <span id="datapoints-badge" class="pill-badge">DATA POINTS: WAITING</span>
+                        <span id="status-badge" class="pill-badge status-idle" aria-live="polite">STATUS: READY</span>
                     </div>
                 </div>
                 <div class="market-context">
                     <div class="context-row">
                         <span class="context-label">TICK VELOCITY</span>
-                        <span id="tick-speed" class="context-value">0.0 / sec</span>
+                        <span id="tick-speed" class="context-value">WAITING</span>
                     </div>
                     <div class="context-row">
                         <span class="context-label">CURRENT STREAK</span>
-                        <span id="streak-counter" class="context-value" style="color: var(--accent-gold);">NONE</span>
+                        <span id="streak-counter" class="context-value" style="color: var(--accent-gold);">WAITING</span>
                     </div>
                     <div class="context-row">
                         <span id="watched-label" class="context-label">WATCHING DIGIT</span>
-                        <span id="watched-value" class="watched-value">-</span>
+                        <span id="watched-value" class="watched-value">WAITING</span>
                     </div>
                 </div>
                 <div class="signal-gauge" style="justify-self: center;">
@@ -1149,27 +1189,25 @@
                 <div class="past-data-box">
                     <div class="past-data-header">
                         <span id="past-data-title" class="past-data-title">EVEN / ODD PAST DATA</span>
-                        <span id="past-data-sample" class="past-data-sample">0 TICKS</span>
+                        <span id="past-data-sample" class="data-status loading" aria-live="polite">WAITING FOR LIVE DATA</span>
                     </div>
                     <div id="past-data-grid" class="past-data-grid">
-                        <div class="past-data-item"><span>EVEN</span><strong>--</strong></div>
-                        <div class="past-data-item"><span>ODD</span><strong>--</strong></div>
-                        <div class="past-data-item"><span>LAST STREAK</span><strong>--</strong></div>
+                        <div class="past-data-item"><span>DATA STATUS</span><strong>LOADING...</strong></div>
                     </div>
                     <div id="past-sequence-label" class="past-sequence-label">LAST DIGIT HISTORY</div>
-                    <div id="past-sequence" class="past-sequence"><span class="sequence-token">--</span></div>
+                    <div id="past-sequence" class="past-sequence"><span class="data-status loading">Waiting for ticks...</span></div>
                 </div>
             </div>
 
             <!-- Strategy Signals Grid -->
             <div class="panel">
                 <div class="market-controls">
-                    <select id="market-select" onchange="changeMarket()">
+                    <select id="market-select" onchange="changeMarket()" disabled aria-busy="true">
                         <option value="R_25">Loading derived markets...</option>
                     </select>
                     <button id="analysis-button" class="btn-primary" onclick="toggleEngine()">START ANALYSIS</button>
                 </div>
-                <span id="market-status" class="market-status">Connecting to Deriv market directory...</span>
+                <span id="market-status" class="market-status loading" role="status" aria-live="polite">Loading Deriv market directory...</span>
                 <div class="panel-label">⚡ Market Signals</div>
                 <div id="selected-method" class="selected-method">ACTIVE METHOD: EVEN / ODD</div>
                 <div class="strategy-grid">
@@ -1224,7 +1262,7 @@
                     <span style="color: var(--text-muted);">Tick Memory</span>
                     <label class="memory-control">
                         <button class="stepper-button" type="button" onclick="adjustTickMemory(-10)" aria-label="Decrease tick memory">-</button>
-                        <input id="tick-memory" type="number" min="20" max="500" step="10" value="200" aria-label="Tick memory" onchange="setTickMemory(this.value)">
+                        <input id="tick-memory" type="number" min="20" max="500" step="10" value="200" aria-label="Tick memory in ticks" onchange="setTickMemory(this.value)">
                         <button class="stepper-button" type="button" onclick="adjustTickMemory(10)" aria-label="Increase tick memory">+</button>
                         <span>Ticks</span>
                     </label>
@@ -1232,7 +1270,7 @@
                 <div class="config-row">
                     <span style="color: var(--text-muted);">Auto-Trading</span>
                     <label class="toggle-control">
-                        <input id="autotrade-toggle" type="checkbox" onchange="toggleAutoTrading(this.checked)">
+                        <input id="autotrade-toggle" type="checkbox" onchange="toggleAutoTrading(this.checked)" aria-describedby="autotrade-status">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -1246,7 +1284,7 @@
                 </div>
                 <div class="config-row">
                     <span style="color: var(--text-muted);">Prediction Filter</span>
-                    <span id="confidence-value" style="font-weight: 700;">60%</span>
+                    <span id="confidence-value" class="config-value" aria-live="polite">60%</span>
                 </div>
                 <div class="prediction-control">
                     <header><span>LOWER</span><span>MORE SELECTIVE</span></header>
@@ -1317,10 +1355,10 @@
             <div class="panel">
                 <div class="panel-label">▦ Operations</div>
                 <div class="ops-grid">
-                    <div class="ops-stat"><span>ACCOUNT</span><strong id="account-mode">NOT CONNECTED</strong></div>
-                    <div class="ops-stat"><span>BALANCE</span><strong id="account-balance">--</strong></div>
+                    <div class="ops-stat"><span>ACCOUNT</span><strong id="account-mode">WAITING FOR API</strong></div>
+                    <div class="ops-stat"><span>BALANCE</span><strong id="account-balance">WAITING</strong></div>
                     <div class="ops-stat"><span>SESSION</span><strong id="session-time">00:00:00</strong></div>
-                    <div class="ops-stat"><span>WIN RATE</span><strong id="win-rate">--</strong></div>
+                    <div class="ops-stat"><span>WIN RATE</span><strong id="win-rate">NO SETTLED TRADES</strong></div>
                     <div class="ops-stat"><span>NET P/L</span><strong id="net-profit">0.00 USD</strong></div>
                     <div class="ops-stat"><span>MODEL TEST</span><strong id="backtest-result">NOT RUN</strong></div>
                 </div>
@@ -1411,16 +1449,17 @@
             btn.innerText = 'STOP ANALYSIS';
             btn.style.background = '#ff5252';
             btn.style.color = '#ffffff';
-            statusBadge.innerText = 'STATUS: RUNNING';
+            statusBadge.innerText = 'STATUS: CONNECTING';
             statusBadge.className = 'pill-badge status-live';
             connectWebSocket();
         } else {
             btn.innerText = 'START ANALYSIS';
             btn.style.background = '#ffffff';
             btn.style.color = '#000000';
-            statusBadge.innerText = 'STATUS: IDLE';
+            statusBadge.innerText = 'STATUS: READY';
             statusBadge.className = 'pill-badge status-idle';
             if (ws) ws.close();
+            setPastDataState('loading', 'ANALYSIS STOPPED', 'Start analysis to load live ticks.');
         }
     }
 
@@ -1449,6 +1488,7 @@
             const data = JSON.parse(event.data);
             if (data.error) {
                 setMarketStatus(`Market directory error: ${data.error.message}`);
+                document.getElementById('market-select').disabled = true;
                 return;
             }
             if (data.msg_type !== 'active_symbols') return;
@@ -1462,12 +1502,19 @@
             renderMarketOptions();
             marketDirectorySocket.close();
         };
-        marketDirectorySocket.onerror = () => setMarketStatus('Unable to load Deriv markets. Retrying...');
+        marketDirectorySocket.onerror = () => {
+            document.getElementById('market-select').disabled = true;
+            setMarketStatus('Unable to load Deriv markets. Retrying...');
+        };
     }
 
     function setMarketStatus(message) {
         const status = document.getElementById('market-status');
-        if (status) status.innerText = message;
+        if (!status) return;
+        status.innerText = message;
+        const state = /error|unable|no open|failed/i.test(message) ? 'error' : /loading|retry|connecting|fetching/i.test(message) ? 'loading' : 'ready';
+        status.className = `market-status ${state}`;
+        status.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
     }
 
     function renderMarketOptions() {
@@ -1487,6 +1534,8 @@
         groups.forEach(group => select.appendChild(group));
         if (!derivedMarkets.some(symbol => symbol.symbol === previousSymbol)) currentSymbol = derivedMarkets[0]?.symbol || previousSymbol;
         select.value = currentSymbol;
+        select.disabled = !derivedMarkets.length;
+        select.setAttribute('aria-busy', 'false');
         setMarketStatus(`${derivedMarkets.length} derived markets available from Deriv`);
     }
 
@@ -1526,9 +1575,15 @@
     }
 
     function setTickMemory(value) {
-        tickMemory = Math.min(500, Math.max(20, Math.round((Number.parseInt(value, 10) || 200) / 10) * 10));
+        const nextMemory = Math.min(500, Math.max(20, Math.round((Number.parseInt(value, 10) || 200) / 10) * 10));
+        const changed = nextMemory !== tickMemory;
+        tickMemory = nextMemory;
         document.getElementById('tick-memory').value = tickMemory;
         if (tickHistory.length > tickMemory) tickHistory = tickHistory.slice(-tickMemory);
+        if (changed && isAnalyzing) {
+            setHint(`Tick memory set to ${tickMemory}. Refreshing the live history...`);
+            connectWebSocket();
+        }
     }
 
     function adjustTickMemory(amount) {
@@ -1554,8 +1609,9 @@
         }
         autoTradingEnabled = enabled;
         const status = document.getElementById('autotrade-status');
-        status.innerText = enabled ? 'AUTO-TRADING ARMED (EXECUTION NOT CONFIGURED)' : 'AUTO-TRADING OFF';
+        status.innerText = enabled ? 'AUTO-TRADING ARMED · WAITING FOR SIGNAL' : 'AUTO-TRADING OFF';
         status.style.color = enabled ? 'var(--accent-gold)' : 'var(--accent-red)';
+        status.setAttribute('aria-live', 'polite');
     }
 
     function setConfidenceThreshold(value) {
@@ -1707,9 +1763,9 @@
         const settled = tradeHistory.filter(trade => trade.status !== 'OPEN');
         const wins = settled.filter(trade => trade.profit > 0).length;
         const profit = tradeHistory.reduce((total, trade) => total + trade.profit, 0);
-        document.getElementById('win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : '--';
+        document.getElementById('win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : 'NO SETTLED TRADES';
         document.getElementById('net-profit').innerText = `${profit.toFixed(2)} USD`;
-        document.getElementById('history-win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : '--';
+        document.getElementById('history-win-rate').innerText = settled.length ? `${((wins / settled.length) * 100).toFixed(0)}%` : 'NO SETTLED TRADES';
         document.getElementById('history-profit').innerText = `${profit.toFixed(2)} USD`;
         document.getElementById('history-wins').innerText = wins;
         document.getElementById('history-losses').innerText = settled.filter(trade => trade.profit < 0).length;
@@ -1753,12 +1809,14 @@
 
     function connectWebSocket() {
         if (ws) ws.close();
+        setPastDataState('loading', 'LOADING LIVE HISTORY', `Connecting to ${currentSymbol}...`);
+        document.getElementById('status-badge').innerText = 'STATUS: CONNECTING';
         const connection = new WebSocket(getPublicWebSocketUrl());
         ws = connection;
 
         connection.onopen = () => {
             reconnectAttempts = 0;
-            document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
+            document.getElementById('status-badge').innerText = 'STATUS: LOADING HISTORY';
             connection.send(JSON.stringify({
                 active_symbols: 'brief',
                 req_id: 10
@@ -1778,6 +1836,9 @@
         connection.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.error) {
+                document.getElementById('status-badge').innerText = 'STATUS: DATA ERROR';
+                document.getElementById('status-badge').className = 'pill-badge status-idle';
+                setPastDataState('error', 'LIVE DATA ERROR', data.error.message);
                 setHint(`API ERROR: ${data.error.message}`);
                 return;
             }
@@ -1793,7 +1854,13 @@
             }
             if (data.msg_type === 'history') {
                 tickHistory = data.history.prices;
-                processData();
+                if (tickHistory.length) {
+                    document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
+                    setMarketStatus(`Live data connected to ${currentSymbol}`);
+                    processData();
+                } else {
+                    setPastDataState('error', 'NO HISTORY AVAILABLE', `Deriv returned no ticks for ${currentSymbol}.`);
+                }
             } else if (data.msg_type === 'tick') {
                 tickHistory.push(data.tick.quote);
                 if (tickHistory.length > tickMemory) tickHistory.shift();
@@ -1803,11 +1870,18 @@
         };
 
         connection.onerror = () => {
+            document.getElementById('status-badge').innerText = 'STATUS: CONNECTION ERROR';
+            document.getElementById('status-badge').className = 'pill-badge status-idle';
+            setPastDataState('error', 'LIVE DATA UNAVAILABLE', 'Check the Deriv connection and try again.');
             setHint('API ERROR: Unable to reach Deriv market data.');
         };
 
         connection.onclose = () => {
             if (ws !== connection) return;
+            if (isAnalyzing) {
+                document.getElementById('status-badge').innerText = 'STATUS: RECONNECTING';
+                document.getElementById('status-badge').className = 'pill-badge status-idle';
+            }
             if (isAnalyzing && reconnectAttempts < 5) {
                 reconnectAttempts++;
                 setHint(`Market connection lost. Reconnecting (${reconnectAttempts}/5)...`);
@@ -1818,6 +1892,12 @@
 
     function processData(latestPrice) {
         if (!tickHistory.length) return;
+
+        if (isAnalyzing) {
+            document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
+            document.getElementById('status-badge').className = 'pill-badge status-live';
+            setMarketStatus(`Live data connected to ${currentSymbol}`);
+        }
 
         const currentPrice = latestPrice || tickHistory[tickHistory.length - 1];
         const priceText = String(currentPrice);
@@ -1953,6 +2033,19 @@
         }
     }
 
+    function setPastDataState(state, title, message) {
+        const sample = document.getElementById('past-data-sample');
+        const grid = document.getElementById('past-data-grid');
+        const sequenceLabel = document.getElementById('past-sequence-label');
+        const sequenceBox = document.getElementById('past-sequence');
+        if (!sample || !grid || !sequenceLabel || !sequenceBox) return;
+        sample.innerText = title;
+        sample.className = `data-status ${state}`;
+        grid.innerHTML = `<div class="past-data-item"><span>DATA STATUS</span><strong>${message}</strong></div>`;
+        sequenceLabel.innerText = 'LIVE DIGIT HISTORY';
+        sequenceBox.innerHTML = `<span class="data-status ${state}">${message}</span>`;
+    }
+
     function renderPastData(digits = tickHistory.map(price => parseInt(price.toString().slice(-1), 10))) {
         const title = document.getElementById('past-data-title');
         const sample = document.getElementById('past-data-sample');
@@ -1961,11 +2054,9 @@
         const sequenceBox = document.getElementById('past-sequence');
         if (!title || !sample || !grid) return;
         sample.innerText = `${digits.length} TICKS`;
+        sample.className = 'data-status ready';
         if (!digits.length) {
-            title.innerText = 'EVEN / ODD PAST DATA';
-            grid.innerHTML = '<div class="past-data-item"><span>EVEN</span><strong>--</strong></div><div class="past-data-item"><span>ODD</span><strong>--</strong></div><div class="past-data-item"><span>LAST STREAK</span><strong>--</strong></div>';
-            sequenceLabel.innerText = 'LAST DIGIT HISTORY';
-            sequenceBox.innerHTML = '<span class="sequence-token">--</span>';
+            setPastDataState('loading', 'WAITING FOR LIVE DATA', 'Start analysis to load live ticks.');
             return;
         }
         const even = digits.filter(digit => digit % 2 === 0).length;
