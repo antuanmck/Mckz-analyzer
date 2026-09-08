@@ -55,6 +55,223 @@
             border-radius: 10px;
         }
 
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-nav button {
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .top-nav button:hover,
+        .top-nav button.active {
+            background: #202631;
+            border-color: var(--panel-border);
+            color: var(--text-main);
+        }
+
+        .view-hidden {
+            display: none !important;
+        }
+
+        .home-view {
+            display: grid;
+            gap: 20px;
+        }
+
+        .home-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+            gap: 20px;
+            align-items: stretch;
+            padding: 30px;
+            background: linear-gradient(125deg, #0d1017 0%, #111925 100%);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+        }
+
+        .home-kicker {
+            color: var(--accent-gold);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .home-hero h2 {
+            max-width: 620px;
+            margin: 12px 0;
+            font-size: clamp(2rem, 5vw, 4rem);
+            line-height: 0.98;
+            letter-spacing: -1px;
+        }
+
+        .home-hero p {
+            max-width: 600px;
+            color: #aab5c6;
+            font-size: 0.84rem;
+            line-height: 1.65;
+        }
+
+        .home-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .home-secondary-action {
+            width: auto;
+            margin-top: 0;
+        }
+
+        .home-status {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px;
+            border-left: 1px solid var(--panel-border);
+        }
+
+        .home-status-label {
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .home-status-value {
+            margin-top: 8px;
+            color: var(--accent-gold);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .home-status-detail {
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            line-height: 1.5;
+        }
+
+        .home-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .home-panel {
+            min-height: 150px;
+            padding: 18px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+        }
+
+        .home-panel h3 {
+            margin-bottom: 10px;
+            color: var(--text-main);
+            font-size: 0.78rem;
+        }
+
+        .home-panel p,
+        .home-panel li {
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            line-height: 1.6;
+        }
+
+        .home-panel ul {
+            padding-left: 16px;
+        }
+
+        .home-guide {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 18px;
+            background: #080b11;
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+        }
+
+        .home-guide-step {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .home-guide-step strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-main);
+            font-size: 0.68rem;
+        }
+
+        .home-guide-step span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            line-height: 1.45;
+        }
+
+        .guide-number {
+            display: inline-flex;
+            flex: 0 0 22px;
+            width: 22px;
+            height: 22px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--accent-gold);
+            border-radius: 50%;
+            color: var(--accent-gold);
+            font-size: 0.62rem;
+            font-weight: 900;
+        }
+
+        .auto-trade-status {
+            min-height: 2.2em;
+            color: var(--accent-red);
+            font-size: 0.68rem;
+            line-height: 1.45;
+        }
+
+        .loss-lock {
+            display: none;
+            margin-top: 8px;
+            padding: 9px 10px;
+            border-left: 2px solid var(--accent-red);
+            background: rgba(255, 82, 82, 0.08);
+            color: #ff9a9a;
+            font-size: 0.65rem;
+            line-height: 1.45;
+        }
+
+        .loss-lock.visible {
+            display: block;
+        }
+
+        .loss-lock button {
+            margin-top: 7px;
+            border: 1px solid rgba(255, 214, 0, 0.5);
+            border-radius: 5px;
+            background: transparent;
+            color: var(--accent-gold);
+            padding: 5px 8px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
         .brand-logo {
             display: flex;
             align-items: center;
@@ -1084,6 +1301,24 @@
                 flex-direction: column;
                 gap: 8px;
             }
+
+            .home-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .home-status {
+                border-top: 1px solid var(--panel-border);
+                border-left: 0;
+                padding: 18px 0 0;
+            }
+
+            .home-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .home-guide {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 600px) {
@@ -1098,6 +1333,14 @@
             .top-bar,
             .panel {
                 padding: 14px;
+            }
+
+            .home-hero {
+                padding: 20px;
+            }
+
+            .top-nav {
+                justify-content: space-between;
             }
 
             .price-hero {
@@ -1137,8 +1380,76 @@
                 <span>NEURAL TICK ENGINE V2.0</span>
             </div>
         </div>
+        <nav class="top-nav" aria-label="Primary navigation">
+            <button id="home-nav" class="active" type="button" onclick="showView('home')">HOME</button>
+            <button id="analyzer-nav" type="button" onclick="showView('analyzer')">ANALYZER</button>
+        </nav>
     </div>
 
+    <main id="home-view" class="home-view" aria-labelledby="home-title">
+        <section class="home-hero">
+            <div>
+                <div class="home-kicker">MCKZAI · NEURAL TICK ENGINE</div>
+                <h2 id="home-title">Read the market with a calmer dashboard.</h2>
+                <p>Connect to Deriv's public derived-market feed without entering an API token. Review live ticks and signals first; authorize only when you are ready to execute trades.</p>
+                <div class="home-actions">
+                    <button class="btn-primary" type="button" onclick="showView('analyzer')">OPEN ANALYZER</button>
+                    <button class="btn-secondary home-secondary-action" type="button" onclick="showView('analyzer', 'execution')">CONNECT FOR TRADING</button>
+                </div>
+            </div>
+            <div class="home-status" aria-live="polite">
+                <div>
+                    <div class="home-status-label">PUBLIC MARKET ACCESS</div>
+                    <div id="home-market-status" class="home-status-value">INITIALIZING</div>
+                    <div id="home-market-detail" class="home-status-detail">Checking Deriv's public market feed...</div>
+                </div>
+                <div>
+                    <div class="home-status-label">TRADING ACCESS</div>
+                    <div id="home-trading-status" class="home-status-value">AUTHORIZATION REQUIRED</div>
+                    <div class="home-status-detail">A Deriv API token is only required for proposals and real-money execution.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-panel" aria-labelledby="connection-guide-title">
+            <h3 id="connection-guide-title">Deriv connection guide</h3>
+            <div class="home-guide">
+                <div class="home-guide-step">
+                    <b class="guide-number">1</b>
+                    <div><strong>Read live markets</strong><span>Open the Analyzer. Public derived-market data loads without an API token.</span></div>
+                </div>
+                <div class="home-guide-step">
+                    <b class="guide-number">2</b>
+                    <div><strong>Authorize trading</strong><span>Use Connect for Trading and enter a Deriv PAT with trade permission and the matching App ID.</span></div>
+                </div>
+                <div class="home-guide-step">
+                    <b class="guide-number">3</b>
+                    <div><strong>Confirm safely</strong><span>Select an account, acknowledge risk, review the proposal, then confirm each manual order.</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-grid" aria-label="MCKZAI capabilities">
+            <article class="home-panel">
+                <h3>Live derived markets</h3>
+                <p id="home-market-count">Market directory is loading.</p>
+            </article>
+            <article class="home-panel">
+                <h3>Signal workspace</h3>
+                <ul>
+                    <li>Five analysis methods</li>
+                    <li>Past tick distribution</li>
+                    <li>Neural confidence filter</li>
+                </ul>
+            </article>
+            <article class="home-panel">
+                <h3>Controlled execution</h3>
+                <p>Trading stays locked until the account is authorized, risk is acknowledged, and a proposal is confirmed.</p>
+            </article>
+        </section>
+    </main>
+
+    <main id="analyzer-view" class="view-hidden" aria-label="Market analyzer">
     <nav class="method-tabs" aria-label="Trading method">
         <button class="method-tab" data-method="over-under" onclick="selectMethod('over-under', this)">Over / Under</button>
         <button class="method-tab active" data-method="even-odd" onclick="selectMethod('even-odd', this)">Even / Odd</button>
@@ -1203,7 +1514,7 @@
             <div class="panel">
                 <div class="market-controls">
                     <select id="market-select" onchange="changeMarket()" disabled aria-busy="true">
-                        <option value="R_25">Loading derived markets...</option>
+                        <option value="R_10">Verifying derived markets...</option>
                     </select>
                     <button id="analysis-button" class="btn-primary" onclick="toggleEngine()">START ANALYSIS</button>
                 </div>
@@ -1290,8 +1601,13 @@
                     <header><span>LOWER</span><span>MORE SELECTIVE</span></header>
                     <input id="confidence-threshold" type="range" min="50" max="95" value="60" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
                 </div>
-                <div id="autotrade-status" style="font-size: 0.68rem; color: var(--accent-red); margin-top: 8px;">AUTO-TRADING OFF</div>
+                <div id="autotrade-status" class="auto-trade-status" aria-live="polite">AUTO-TRADING OFF</div>
                 <div id="trade-count" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 5px;">TRADES: 0 / 1</div>
+                <div id="loss-lock" class="loss-lock" role="status" aria-live="assertive">
+                    <strong>MAX LOSS STREAK REACHED</strong><br>
+                    Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
+                    <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
+                </div>
                 <div class="trade-settings">
                     <label id="contract-field">CONTRACT
                         <select id="contract-type">
@@ -1344,7 +1660,7 @@
             </div>
 
             <!-- API Auth Execution Panel (Replaces Go Premium) -->
-            <div class="panel">
+            <div id="api-execution" class="panel">
                 <div class="panel-label">🔑 API Execution</div>
                 <input type="password" id="api-token" placeholder="Paste Deriv API Token" oninput="clearApiStatus()">
                 <input type="text" id="deriv-app-id" placeholder="New Deriv App ID" oninput="clearApiStatus()">
@@ -1384,6 +1700,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     <!-- Footer -->
     <div class="footer-bar">
@@ -1403,7 +1720,7 @@
     const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
     let ws = null;
     let tickHistory = [];
-    let currentSymbol = 'R_25';
+    let currentSymbol = 'R_10';
     let isAnalyzing = false;
     let apiWs = null;
     let selectedMethod = 'even-odd';
@@ -1430,10 +1747,33 @@
     let tickMemory = 200;
     let tradeHistory = [];
     let lossStreak = 0;
+    let lossStreakLocked = false;
     let lastTradeAt = 0;
     let emergencyStopped = false;
     let derivedMarkets = [];
     let marketDirectorySocket = null;
+    let marketProbeSocket = null;
+    let marketProbeTimer = null;
+    let marketConnectionTimer = null;
+    let marketPollingTimer = null;
+    const FALLBACK_DERIVED_MARKETS = [
+        ['Volatility Indices', 'Volatility 10 Index', 'R_10'],
+        ['Volatility Indices', 'Volatility 50 Index', 'R_50'],
+        ['Volatility Indices', 'Volatility 75 Index', 'R_75'],
+        ['Volatility Indices', 'Volatility 100 Index', 'R_100'],
+        ['Volatility Indices', 'Volatility 10 (1s) Index', '1HZ10V'],
+        ['Volatility Indices', 'Volatility 25 (1s) Index', '1HZ25V'],
+        ['Volatility Indices', 'Volatility 50 (1s) Index', '1HZ50V'],
+        ['Volatility Indices', 'Volatility 75 (1s) Index', '1HZ75V'],
+        ['Volatility Indices', 'Volatility 100 (1s) Index', '1HZ100V'],
+        ['Crash/Boom Indices', 'Crash 300 Index', 'CRASH300N'],
+        ['Crash/Boom Indices', 'Boom 300 Index', 'BOOM300N'],
+        ['Crash/Boom Indices', 'Crash 500 Index', 'CRASH500'],
+        ['Crash/Boom Indices', 'Boom 500 Index', 'BOOM500'],
+        ['Crash/Boom Indices', 'Crash 1000 Index', 'CRASH1000'],
+        ['Crash/Boom Indices', 'Boom 1000 Index', 'BOOM1000']
+    ].map(([submarket, display_name, symbol]) => ({ submarket, display_name, symbol }));
+    derivedMarkets = [FALLBACK_DERIVED_MARKETS[0]];
 
     // Render Initial Grid Framework
     function initDigitGrid() {
@@ -1446,6 +1786,7 @@
         const statusBadge = document.getElementById('status-badge');
 
         if (isAnalyzing) {
+            reconnectAttempts = 0;
             btn.innerText = 'STOP ANALYSIS';
             btn.style.background = '#ff5252';
             btn.style.color = '#ffffff';
@@ -1473,8 +1814,59 @@
     }
 
     function getPublicWebSocketUrl() {
-        const appId = authAppId || DEFAULT_PUBLIC_APP_ID;
-        return `${PUBLIC_WS_BASE}?app_id=${encodeURIComponent(appId)}`;
+        return `${PUBLIC_WS_BASE}?app_id=${DEFAULT_PUBLIC_APP_ID}`;
+    }
+
+    function probeFallbackMarkets(reason) {
+        if (marketProbeSocket) return;
+        if (marketDirectorySocket) {
+            marketDirectorySocket.close();
+            marketDirectorySocket = null;
+        }
+        setMarketStatus(`${reason} Verifying available derived markets...`);
+        const candidates = FALLBACK_DERIVED_MARKETS;
+        const validMarkets = [];
+        let candidateIndex = 0;
+        marketProbeSocket = new WebSocket(getPublicWebSocketUrl());
+        const finish = () => {
+            window.clearTimeout(marketProbeTimer);
+            marketProbeSocket?.close();
+            marketProbeSocket = null;
+            if (validMarkets.length) {
+                derivedMarkets = validMarkets;
+                if (!validMarkets.some(market => market.symbol === currentSymbol)) currentSymbol = validMarkets[0].symbol;
+                renderMarketOptions();
+                setMarketStatus(`${validMarkets.length} verified derived markets available from Deriv`);
+                if (isAnalyzing) connectWebSocket();
+            } else {
+                setMarketStatus('Deriv did not return a usable derived market. Retrying...');
+                window.setTimeout(loadDerivedMarkets, 10000);
+            }
+        };
+        const requestNext = () => {
+            if (candidateIndex >= candidates.length) {
+                finish();
+                return;
+            }
+            const candidate = candidates[candidateIndex++];
+            marketProbeSocket.send(JSON.stringify({
+                ticks_history: candidate.symbol,
+                count: 1,
+                end: 'latest',
+                style: 'ticks',
+                req_id: 900 + candidateIndex
+            }));
+        };
+        marketProbeSocket.onopen = requestNext;
+        marketProbeSocket.onmessage = event => {
+            const data = JSON.parse(event.data);
+            if (!data.req_id || data.req_id < 901) return;
+            const candidate = candidates[data.req_id - 901];
+            if (candidate && data.msg_type === 'history' && data.history?.prices?.length) validMarkets.push(candidate);
+            requestNext();
+        };
+        marketProbeSocket.onerror = finish;
+        marketProbeTimer = window.setTimeout(finish, 15000);
     }
 
     function loadDerivedMarkets() {
@@ -1487,15 +1879,14 @@
         marketDirectorySocket.onmessage = event => {
             const data = JSON.parse(event.data);
             if (data.error) {
-                setMarketStatus(`Market directory error: ${data.error.message}`);
-                document.getElementById('market-select').disabled = true;
+                probeFallbackMarkets(`Market directory error: ${data.error.message}`);
+                document.getElementById('market-select').disabled = false;
                 return;
             }
             if (data.msg_type !== 'active_symbols') return;
             const symbols = data.active_symbols.filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
             if (!symbols.length) {
-                setMarketStatus('Deriv returned no open derived markets. Retrying...');
-                window.setTimeout(loadDerivedMarkets, 10000);
+                probeFallbackMarkets('Deriv directory returned no symbols.');
                 return;
             }
             derivedMarkets = symbols.sort((first, second) => `${first.submarket}${first.display_name}`.localeCompare(`${second.submarket}${second.display_name}`));
@@ -1503,18 +1894,27 @@
             marketDirectorySocket.close();
         };
         marketDirectorySocket.onerror = () => {
-            document.getElementById('market-select').disabled = true;
-            setMarketStatus('Unable to load Deriv markets. Retrying...');
+            probeFallbackMarkets('Unable to load Deriv market directory.');
+            document.getElementById('market-select').disabled = false;
         };
     }
 
     function setMarketStatus(message) {
         const status = document.getElementById('market-status');
+        const homeStatus = document.getElementById('home-market-status');
+        const homeDetail = document.getElementById('home-market-detail');
+        const homeCount = document.getElementById('home-market-count');
         if (!status) return;
         status.innerText = message;
-        const state = /error|unable|no open|failed/i.test(message) ? 'error' : /loading|retry|connecting|fetching/i.test(message) ? 'loading' : 'ready';
+        const state = /error|unable|no open|failed/i.test(message) ? 'error' : /loading|retry|connecting|fetching|verifying|waiting/i.test(message) ? 'loading' : 'ready';
         status.className = `market-status ${state}`;
         status.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+        if (homeStatus) {
+            homeStatus.innerText = state === 'ready' ? 'CONNECTED' : state === 'error' ? 'RETRYING' : 'INITIALIZING';
+            homeStatus.style.color = state === 'ready' ? 'var(--accent-green)' : state === 'error' ? 'var(--accent-red)' : 'var(--accent-gold)';
+        }
+        if (homeDetail) homeDetail.innerText = message;
+        if (homeCount && derivedMarkets.length) homeCount.innerText = `${derivedMarkets.length} derived markets available for public live data.`;
     }
 
     function renderMarketOptions() {
@@ -1539,7 +1939,25 @@
         setMarketStatus(`${derivedMarkets.length} derived markets available from Deriv`);
     }
 
+    function showView(view, target) {
+        const isHome = view === 'home';
+        document.getElementById('home-view').classList.toggle('view-hidden', !isHome);
+        document.getElementById('analyzer-view').classList.toggle('view-hidden', isHome);
+        document.getElementById('home-nav').classList.toggle('active', isHome);
+        document.getElementById('analyzer-nav').classList.toggle('active', !isHome);
+        if (!isHome && target === 'execution') {
+            window.setTimeout(() => {
+                document.getElementById('api-execution')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('api-token')?.focus();
+            }, 0);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function selectMethod(method, button) {
+        if (selectedMethod !== method && autoTradingEnabled) {
+            stopAutoTrading(`Auto-trading canceled because the method changed to ${method.toUpperCase().replace('-', ' / ')}.`);
+        }
         selectedMethod = method;
         document.querySelectorAll('.method-tab').forEach(tab => tab.classList.remove('active'));
         button.classList.add('active');
@@ -1602,16 +2020,24 @@
     }
 
     function toggleAutoTrading(enabled) {
-        if (emergencyStopped && enabled) {
-            setHint('TRADE BLOCKED: Reset the page after an emergency stop.');
+        if (enabled && emergencyStopped) {
+            setAutoTradeStatus('AUTO-TRADING BLOCKED · EMERGENCY STOP ACTIVE', false);
+            document.getElementById('autotrade-toggle').checked = false;
+            return;
+        }
+        if (enabled && lossStreakLocked) {
+            setAutoTradeStatus('AUTO-TRADING BLOCKED · MAX LOSS STREAK REACHED', false);
             document.getElementById('autotrade-toggle').checked = false;
             return;
         }
         autoTradingEnabled = enabled;
+        setAutoTradeStatus(enabled ? 'AUTO-TRADING ARMED · WAITING FOR SIGNAL' : 'AUTO-TRADING OFF', enabled);
+    }
+
+    function setAutoTradeStatus(message, active) {
         const status = document.getElementById('autotrade-status');
-        status.innerText = enabled ? 'AUTO-TRADING ARMED · WAITING FOR SIGNAL' : 'AUTO-TRADING OFF';
-        status.style.color = enabled ? 'var(--accent-gold)' : 'var(--accent-red)';
-        status.setAttribute('aria-live', 'polite');
+        status.innerText = message;
+        status.style.color = active ? 'var(--accent-gold)' : 'var(--accent-red)';
     }
 
     function setConfidenceThreshold(value) {
@@ -1629,15 +2055,43 @@
     }
 
     function startAutoTrading() {
+        if (lossStreakLocked) {
+            setAutoTradeStatus('AUTO-TRADING BLOCKED · RESET LOSS LOCK FIRST', false);
+            setHint('Auto-trading cannot restart until the max loss streak lock is reset.');
+            return;
+        }
         toggleAutoTrading(true);
         document.getElementById('autotrade-toggle').checked = true;
         setHint(`Automatic trading armed for up to ${autoTradeLimit} trade${autoTradeLimit === 1 ? '' : 's'}. It will wait for authorization, risk acknowledgement, and ${confidenceThreshold}% confidence.`);
     }
 
-    function stopAutoTrading() {
+    function stopAutoTradingWithReason(message) {
         toggleAutoTrading(false);
         document.getElementById('autotrade-toggle').checked = false;
-        setHint('Automatic trading stopped.');
+        setAutoTradeStatus(message, false);
+        setHint(message);
+    }
+
+    function stopAutoTrading(message) {
+        stopAutoTradingWithReason(message || 'Automatic trading stopped by user.');
+    }
+
+    function lockTradingForLossStreak() {
+        lossStreakLocked = true;
+        autoTradingEnabled = false;
+        document.getElementById('autotrade-toggle').checked = false;
+        document.getElementById('loss-lock').classList.add('visible');
+        setAutoTradeStatus('AUTO-TRADING STOPPED · MAX LOSS STREAK REACHED', false);
+        setTradeEvent(`Max loss streak reached (${lossStreak}). Trading paused until the lock is reset.`);
+        setHint(`MAX LOSS STREAK REACHED: ${lossStreak}. Review risk settings, then reset the loss lock to re-enable trading.`);
+    }
+
+    function resetLossStreakLock() {
+        lossStreakLocked = false;
+        lossStreak = 0;
+        document.getElementById('loss-lock').classList.remove('visible');
+        setAutoTradeStatus('AUTO-TRADING OFF · LOSS LOCK RESET', false);
+        setHint('Max loss streak lock reset. Review risk settings before re-enabling trading.');
     }
 
     function getTradeSettings() {
@@ -1653,16 +2107,23 @@
         const settings = getTradeSettings();
         const netProfit = tradeHistory.reduce((total, trade) => total + (trade.profit || 0), 0);
         const dailyLoss = Math.max(0, -netProfit);
-        if (!isAuthorized || !apiWs || apiWs.readyState !== WebSocket.OPEN) {
+        if (!apiWs || apiWs.readyState !== WebSocket.OPEN) {
             const socketState = !apiWs ? 'not created' : ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][apiWs.readyState] || 'unknown';
-            return `Trading connection is ${socketState}. Reconnect the API and wait for CONNECTED.`;
+            return `Trading connection is ${socketState}. Connect the API and wait for the trading session.`;
+        }
+        if (!isAuthorized) {
+            return 'Deriv trading authorization is not complete. Reconnect the API and wait for AUTHORIZED.';
         }
         if (emergencyStopped) return 'Emergency stop is active. Reload the page to reset it.';
+        if (lossStreakLocked) return 'Maximum loss streak reached. Reset the loss lock before trading again.';
         if (Date.now() - lastTradeAt < 3000) return 'Cooldown active. Wait 3 seconds between trades.';
         if (Number.parseFloat(document.getElementById('stop-loss').value) > 0 && netProfit <= -Number.parseFloat(document.getElementById('stop-loss').value)) return 'Stop-loss limit reached.';
         if (Number.parseFloat(document.getElementById('take-profit').value) > 0 && netProfit >= Number.parseFloat(document.getElementById('take-profit').value)) return 'Take-profit limit reached.';
         if (Number.parseFloat(document.getElementById('daily-loss').value) > 0 && dailyLoss >= Number.parseFloat(document.getElementById('daily-loss').value)) return 'Maximum daily loss reached.';
-        if (lossStreak >= Number.parseInt(document.getElementById('loss-streak').value, 10)) return 'Maximum consecutive losses reached.';
+        if (lossStreak >= Number.parseInt(document.getElementById('loss-streak').value, 10)) {
+            lockTradingForLossStreak();
+            return 'Maximum loss streak reached. Reset the loss lock before trading again.';
+        }
         if (!document.getElementById('risk-confirm').checked) return 'Confirm the real-money risk acknowledgement first.';
         if (!Number.isFinite(settings.stake) || settings.stake < 0.35) return 'Stake must be at least 0.35.';
         if (!Number.isInteger(settings.duration) || settings.duration < 1 || settings.duration > 10) return 'Duration must be between 1 and 10 ticks.';
@@ -1808,13 +2269,28 @@
     }
 
     function connectWebSocket() {
+        if (!derivedMarkets.length) {
+            setPastDataState('loading', 'WAITING FOR MARKET', 'Verifying Deriv market symbols...');
+            setMarketStatus('Waiting for Deriv to verify a usable market...');
+            probeFallbackMarkets('Market directory is unavailable.');
+            return;
+        }
         if (ws) ws.close();
+        window.clearInterval(marketPollingTimer);
+        window.clearTimeout(marketConnectionTimer);
         setPastDataState('loading', 'LOADING LIVE HISTORY', `Connecting to ${currentSymbol}...`);
         document.getElementById('status-badge').innerText = 'STATUS: CONNECTING';
         const connection = new WebSocket(getPublicWebSocketUrl());
         ws = connection;
+        marketConnectionTimer = window.setTimeout(() => {
+            if (ws === connection && connection.readyState === WebSocket.CONNECTING) {
+                connection.close();
+                setPastDataState('error', 'CONNECTION TIMEOUT', 'Deriv did not respond. Retrying...');
+            }
+        }, 10000);
 
         connection.onopen = () => {
+            window.clearTimeout(marketConnectionTimer);
             reconnectAttempts = 0;
             document.getElementById('status-badge').innerText = 'STATUS: LOADING HISTORY';
             connection.send(JSON.stringify({
@@ -1827,7 +2303,6 @@
                 count: tickMemory,
                 end: "latest",
                 style: "ticks",
-                subscribe: 1,
                 req_id: 1
             }));
             setHint(`Connected to ${currentSymbol}. Waiting for market ticks...`);
@@ -1836,6 +2311,18 @@
         connection.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.error) {
+                if (/symbol .* invalid/i.test(data.error.message || '') && derivedMarkets.length > 1) {
+                    const nextMarket = derivedMarkets.find(market => market.symbol !== currentSymbol);
+                    if (nextMarket) {
+                        currentSymbol = nextMarket.symbol;
+                        document.getElementById('market-select').value = currentSymbol;
+                        tickHistory = [];
+                        setHint(`Deriv rejected the selected symbol. Switching to verified ${currentSymbol}.`);
+                        connection.close();
+                        window.setTimeout(connectWebSocket, 100);
+                        return;
+                    }
+                }
                 document.getElementById('status-badge').innerText = 'STATUS: DATA ERROR';
                 document.getElementById('status-badge').className = 'pill-badge status-idle';
                 setPastDataState('error', 'LIVE DATA ERROR', data.error.message);
@@ -1858,6 +2345,17 @@
                     document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
                     setMarketStatus(`Live data connected to ${currentSymbol}`);
                     processData();
+                    if (!marketPollingTimer) {
+                        marketPollingTimer = window.setInterval(() => {
+                            if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({
+                                ticks_history: currentSymbol,
+                                count: tickMemory,
+                                end: 'latest',
+                                style: 'ticks',
+                                req_id: 1
+                            }));
+                        }, 2000);
+                    }
                 } else {
                     setPastDataState('error', 'NO HISTORY AVAILABLE', `Deriv returned no ticks for ${currentSymbol}.`);
                 }
@@ -1878,6 +2376,9 @@
 
         connection.onclose = () => {
             if (ws !== connection) return;
+            window.clearTimeout(marketConnectionTimer);
+            window.clearInterval(marketPollingTimer);
+            marketPollingTimer = null;
             if (isAnalyzing) {
                 document.getElementById('status-badge').innerText = 'STATUS: RECONNECTING';
                 document.getElementById('status-badge').className = 'pill-badge status-idle';
@@ -2149,21 +2650,22 @@
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.errors?.[0]?.message || `OTP request failed (${response.status})`);
-        apiWs = new WebSocket(result.data.url);
+        const connection = new WebSocket(result.data.url);
+        apiWs = connection;
 
-        apiWs.onopen = () => {
+        connection.onopen = () => {
             isAuthorized = true;
             status.innerText = 'CONNECTED: TRADING SESSION READY';
             status.style.color = 'var(--accent-green)';
             const account = accountList.find(item => (item.account_id || item.id || item.loginid) === accountId);
             if (account) setAccountDisplay({ loginid: accountId, is_virtual: account.is_virtual || account.account_type === 'demo' });
-            apiWs.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+            connection.send(JSON.stringify({ balance: 1, subscribe: 1, req_id: 701 }));
             heartbeatTimer = window.setInterval(() => {
-                if (apiWs && apiWs.readyState === WebSocket.OPEN) apiWs.send(JSON.stringify({ ping: 1 }));
+                if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({ ping: 1 }));
             }, 30000);
         };
 
-        apiWs.onmessage = (event) => {
+        connection.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.error) {
                 tradeInFlight = false;
@@ -2183,18 +2685,18 @@
                 status.style.color = 'var(--accent-red)';
                 setTradeEvent(`Deriv rejected the request: ${errorMessage}`);
                 setHint(`TRADE BLOCKED BY DERIV: ${errorMessage}`);
-                if (/authorize|token|permission|authentication/i.test(errorMessage)) isAuthorized = false;
+                if (/authorize|token|permission|authentication/i.test(errorMessage)) {
+                    isAuthorized = false;
+                    document.getElementById('account-mode').innerText = 'AUTHORIZATION FAILED';
+                }
                 return;
             }
-            if (data.msg_type === 'authorize') {
-                isAuthorized = true;
-                status.innerText = `CONNECTED: ${data.authorize.loginid}`;
-                status.style.color = 'var(--accent-green)';
-                setAccountDisplay(data.authorize);
-                apiWs.send(JSON.stringify({ balance: 1, subscribe: 1 }));
-            }
             if (data.msg_type === 'balance') {
+                isAuthorized = true;
+                status.innerText = `CONNECTED: TRADING SESSION READY`;
+                status.style.color = 'var(--accent-green)';
                 document.getElementById('account-balance').innerText = `${Number(data.balance.balance).toFixed(2)} ${data.balance.currency}`;
+                setHint(`Deriv trading session confirmed for ${accountId}.`);
             }
             if (data.msg_type === 'proposal') {
                 tradeInFlight = false;
@@ -2211,7 +2713,7 @@
                     document.getElementById('confirm-trade').style.display = 'block';
                     setTradeEvent(`Proposal ready at ${data.proposal.ask_price} USD. Confirm the buy order to place it.`);
                 }
-                apiWs.pendingAutomaticTrade = false;
+                    connection.pendingAutomaticTrade = false;
             }
             if (data.msg_type === 'buy') {
                 tradeInFlight = false;
@@ -2227,7 +2729,7 @@
                 pendingTradeRecordId = null;
                 updateTradeStats();
                 setTradeEvent(`Trade placed. Contract ID: ${data.buy.contract_id}`);
-                apiWs.send(JSON.stringify({ proposal_open_contract: 1, contract_id: data.buy.contract_id, subscribe: 1 }));
+                connection.send(JSON.stringify({ proposal_open_contract: 1, contract_id: data.buy.contract_id, subscribe: 1 }));
             }
             if (data.msg_type === 'proposal_open_contract') {
                 const contract = data.proposal_open_contract;
@@ -2239,6 +2741,8 @@
                         lossStreak = trade.profit < 0 ? lossStreak + 1 : 0;
                         updateTradeStats();
                         setTradeEvent(`Contract ${trade.status.toLowerCase()}. Result: ${trade.profit.toFixed(2)} USD.`);
+                        const maxLossStreak = Number.parseInt(document.getElementById('loss-streak').value, 10);
+                        if (lossStreak >= maxLossStreak) lockTradingForLossStreak();
                     }
                 }
 
@@ -2252,12 +2756,12 @@
             }
         };
 
-        apiWs.onerror = () => {
+        connection.onerror = () => {
             status.innerText = 'Unable to reach Deriv API.';
             status.style.color = 'var(--accent-red)';
         };
 
-        apiWs.onclose = () => {
+        connection.onclose = () => {
             isAuthorized = false;
             tradeInFlight = false;
             window.clearInterval(heartbeatTimer);
@@ -2308,6 +2812,11 @@
     function setAccountDisplay(account) {
         document.getElementById('account-mode').innerText = account.is_virtual ? 'DEMO' : 'LIVE';
         document.getElementById('account-select').value = account.loginid;
+        const tradingStatus = document.getElementById('home-trading-status');
+        if (tradingStatus) {
+            tradingStatus.innerText = account.is_virtual ? 'DEMO READY' : 'LIVE READY';
+            tradingStatus.style.color = 'var(--accent-green)';
+        }
     }
 
     function switchAccount(loginid) {
@@ -2337,6 +2846,7 @@
 
     // Initialize layout
     initDigitGrid();
+    showView('home');
     loadDerivedMarkets();
     updateMethodPresentation();
     updateTradeCount();
