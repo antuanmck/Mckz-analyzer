@@ -448,20 +448,29 @@
         /* Market Intensity Header Panel */
         .intensity-card {
             display: grid;
-            grid-template-columns: 1.8fr 1.2fr 1fr;
-            gap: 20px;
+            grid-template-columns: minmax(0, 1.8fr) minmax(128px, 1.1fr) minmax(112px, 0.9fr);
+            gap: 14px;
             align-items: center;
+            overflow: hidden;
+        }
+
+        .intensity-card > div:first-child {
+            min-width: 0;
         }
 
         .price-line {
             display: flex;
             align-items: baseline;
-            gap: 14px;
+            gap: 8px;
+            min-width: 0;
         }
 
         .price-delta {
-            font-size: 1.1rem;
+            flex: 0 0 76px;
+            font-size: 0.82rem;
             font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
 
         .market-context {
@@ -471,6 +480,7 @@
             border-left: 1px solid var(--panel-border);
             border-right: 1px solid var(--panel-border);
             padding: 0 16px;
+            min-width: 0;
         }
 
         .context-row {
@@ -481,28 +491,25 @@
         }
 
         .context-label {
-            color: var(--text-muted);
+            color: #8b949e;
             font-size: 0.62rem;
             font-weight: 700;
+            text-transform: uppercase;
         }
 
         .context-value {
-            color: var(--text-main);
+            color: #ffffff;
             font-size: 0.78rem;
-            font-weight: 800;
+            font-weight: 900;
             text-align: right;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
 
         .price-hero .active-price-digit {
             color: var(--accent-gold);
             text-decoration: underline;
             text-underline-offset: 3px;
-        }
-
-        .watched-value {
-            color: var(--accent-gold);
-            font-size: 1rem;
-            font-weight: 900;
         }
 
         .panel-label {
@@ -518,11 +525,16 @@
         }
 
         .price-hero {
-            font-size: 3.5rem;
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
+            font-size: clamp(1.9rem, 4vw, 3rem);
             font-weight: 900;
-            letter-spacing: -1px;
+            letter-spacing: 0;
             line-height: 1;
             margin-bottom: 16px;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
 
         .badge-row {
@@ -557,6 +569,9 @@
             --signal-progress: 0deg;
             width: 130px;
             height: 130px;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0;
             border-radius: 50%;
             background: conic-gradient(var(--signal-color, #334155) var(--signal-progress), #18212e 0deg);
             display: flex;
@@ -607,6 +622,10 @@
             font-weight: 800;
             transition: color 0.3s ease;
         }
+
+        .signal-gauge.high .gauge-value { color: #00ff88; }
+        .signal-gauge.medium .gauge-value { color: #ffaa00; }
+        .signal-gauge.low .gauge-value { color: #ff4444; }
 
         .signal-gauge .gauge-sub {
             font-size: 0.6rem;
@@ -872,42 +891,54 @@
         .prediction-control header {
             display: flex;
             justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.62rem;
+            color: var(--text-main);
+            font-size: 0.68rem;
             font-weight: 700;
+            text-transform: uppercase;
         }
 
         .prediction-control input {
             width: 100%;
-            height: 8px;
+            height: 6px;
             appearance: none;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--accent-gold), #263244);
+            border-radius: 3px;
+            background: linear-gradient(90deg, #00ff88 var(--slider-progress, 0%), #21262d var(--slider-progress, 0%));
             cursor: pointer;
+            display: block;
+            margin: 12px 0 8px;
         }
 
         .prediction-control input::-webkit-slider-thumb {
             width: 18px;
             height: 18px;
             appearance: none;
-            border: 3px solid var(--panel-bg);
+            border: 0;
             border-radius: 50%;
-            background: var(--accent-gold);
-            box-shadow: 0 0 0 1px var(--accent-gold), 0 0 12px rgba(255, 214, 0, 0.45);
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
         .prediction-control input::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            border: 3px solid var(--panel-bg);
+            width: 18px;
+            height: 18px;
+            border: 0;
             border-radius: 50%;
-            background: var(--accent-gold);
-            box-shadow: 0 0 0 1px var(--accent-gold), 0 0 12px rgba(255, 214, 0, 0.45);
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
         .prediction-control input:focus-visible {
-            outline: 2px solid rgba(255, 214, 0, 0.5);
+            outline: 2px solid rgba(0, 255, 136, 0.5);
             outline-offset: 5px;
+        }
+
+        .prediction-control footer {
+            display: flex;
+            justify-content: space-between;
+            color: #8b949e;
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         .memory-select {
@@ -1616,20 +1647,16 @@
                 </div>
                 <div class="market-context">
                     <div class="context-row">
-                        <span class="context-label">TICK VELOCITY</span>
-                        <span id="tick-speed" class="context-value">WAITING</span>
-                    </div>
-                    <div class="context-row">
-                        <span class="context-label">CURRENT STREAK</span>
+                        <span id="context-label-one" class="context-label">CURRENT STREAK</span>
                         <span id="streak-counter" class="context-value" style="color: var(--accent-gold);">WAITING</span>
                     </div>
                     <div class="context-row">
-                        <span id="watched-label" class="context-label">WATCHING DIGIT</span>
-                        <span id="watched-value" class="watched-value">WAITING</span>
+                        <span id="context-label-two" class="context-label">EVEN / ODD RATIO</span>
+                        <span id="parity-ratio" class="context-value">WAITING</span>
                     </div>
                 </div>
                 <div id="signal-gauge" class="signal-gauge low" style="justify-self: center;" role="meter" aria-label="Signal strength" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                    <div id="gauge-val" class="gauge-value">-</div>
+                    <div id="gauge-val" class="gauge-value"><span id="confidence-percentage">-</span></div>
                     <div class="gauge-sub">SIGNAL STRENGTH</div>
                 </div>
             </div>
@@ -1734,13 +1761,10 @@
                         <button class="stepper-button" type="button" onclick="adjustTradeLimit(1)" aria-label="Increase trade limit">+</button>
                     </label>
                 </div>
-                <div class="config-row">
-                    <span style="color: var(--text-muted);">Prediction Filter</span>
-                    <span id="confidence-value" class="config-value" aria-live="polite">60%</span>
-                </div>
                 <div class="prediction-control">
-                    <header><span>LOWER</span><span>100% SELECTIVE</span></header>
-                    <input id="confidence-threshold" type="range" min="50" max="100" value="60" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
+                    <header><span>PREDICTION FILTER</span><span id="confidence-value" aria-live="polite">70%</span></header>
+                    <input id="confidence-threshold" type="range" min="70" max="100" value="70" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
+                    <footer><span>AGGRESSIVE (LOW)</span><span>SELECTIVE (HIGH)</span></footer>
                 </div>
                 <div id="autotrade-status" class="auto-trade-status" aria-live="polite">AUTO-TRADING OFF</div>
                 <div id="trade-count" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 5px;">TRADES: 0 / 1</div>
@@ -1867,6 +1891,10 @@
     const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
     let ws = null;
     let tickHistory = [];
+    const tickHistoryBuffer = [];
+    const predictionHistoryBuffer = [];
+    const MAX_BUFFER_SIZE = 10;
+    const MIN_CONFIDENCE_THRESHOLD = 70;
     let currentSymbol = 'R_10';
     let isAnalyzing = false;
     let apiWs = null;
@@ -1889,7 +1917,7 @@
     let lastModelConfidence = 0;
     let pendingTradeRecordId = null;
     let accountList = [];
-    let confidenceThreshold = 60;
+    let confidenceThreshold = MIN_CONFIDENCE_THRESHOLD;
     let reconnectAttempts = 0;
     let heartbeatTimer = null;
     let authToken = '';
@@ -1963,6 +1991,8 @@
     function changeMarket() {
         currentSymbol = document.getElementById('market-select').value;
         tickHistory = [];
+        tickHistoryBuffer.length = 0;
+        predictionHistoryBuffer.length = 0;
         sessionTickCount = 0;
         lastTickAt = 0;
         lastTickPrice = null;
@@ -2137,21 +2167,20 @@
 
     function updateMethodPresentation() {
         const presentation = {
-            'over-under': { first: 'OVER / UNDER BIAS', second: 'BARRIER TARGET', third: 'DISTANCE FROM BARRIER', contract: 'DIGITOVER', watchLabel: 'WATCHING BARRIER' },
-            'even-odd': { first: 'EVEN / ODD BIAS', second: 'OVER / UNDER 5', third: 'MATCHES STRENGTH', contract: 'DIGITEVEN', watchLabel: 'WATCHING DIGIT' },
-            'match-differ': { first: 'MATCH / DIFFER BIAS', second: 'LAST DIGIT', third: 'MATCH FREQUENCY', contract: 'DIGITMATCH', watchLabel: 'WATCHING DIGIT' },
-            'rise-fall': { first: 'RISE / FALL BIAS', second: 'PRICE DELTA', third: 'TREND STRENGTH', contract: 'CALL', watchLabel: 'WATCHING TREND' },
-            'accum': { first: 'ACCUM ACTIVITY', second: 'PRICE RANGE', third: 'VOLATILITY', contract: 'ACCU', watchLabel: 'WATCHING RANGE' }
+            'over-under': { first: 'OVER / UNDER BIAS', second: 'BARRIER TARGET', third: 'DISTANCE FROM BARRIER', contract: 'DIGITOVER' },
+            'even-odd': { first: 'EVEN / ODD BIAS', second: 'OVER / UNDER 5', third: 'MATCHES STRENGTH', contract: 'DIGITEVEN' },
+            'match-differ': { first: 'MATCH / DIFFER BIAS', second: 'LAST DIGIT', third: 'MATCH FREQUENCY', contract: 'DIGITMATCH' },
+            'rise-fall': { first: 'RISE / FALL BIAS', second: 'PRICE DELTA', third: 'TREND STRENGTH', contract: 'CALL' },
+            'accum': { first: 'ACCUM ACTIVITY', second: 'PRICE RANGE', third: 'VOLATILITY', contract: 'ACCU' }
         }[selectedMethod];
         document.getElementById('signal-label-one').innerText = presentation.first;
         document.getElementById('signal-label-two').innerText = presentation.second;
         document.getElementById('signal-label-three').innerText = presentation.third;
-        document.getElementById('watched-label').innerText = presentation.watchLabel;
         document.getElementById('contract-type').value = presentation.contract;
         document.getElementById('barrier-field').classList.toggle('hidden', selectedMethod !== 'over-under');
         document.getElementById('contract-field').classList.toggle('hidden', selectedMethod === 'even-odd' || selectedMethod === 'over-under' || selectedMethod === 'match-differ' || selectedMethod === 'rise-fall' || selectedMethod === 'accum');
         updateTradeParameterFields();
-        updateWatchedTarget();
+        updateContextMetrics();
     }
 
     function updateTradeParameterFields() {
@@ -2207,21 +2236,24 @@
     }
 
     function setConfidenceThreshold(value) {
-        confidenceThreshold = Math.min(100, Math.max(50, Number.parseInt(value, 10) || 60));
-        document.getElementById('confidence-threshold').value = confidenceThreshold;
+        confidenceThreshold = Math.min(100, Math.max(MIN_CONFIDENCE_THRESHOLD, Number.parseInt(value, 10) || MIN_CONFIDENCE_THRESHOLD));
+        const slider = document.getElementById('confidence-threshold');
+        slider.value = confidenceThreshold;
+        slider.style.setProperty('--slider-progress', `${((confidenceThreshold - Number(slider.min)) / (Number(slider.max) - Number(slider.min))) * 100}%`);
         document.getElementById('confidence-value').innerText = `${confidenceThreshold}%`;
     }
 
     function updateSignalGauge(value, sampleSize) {
         const gauge = document.getElementById('signal-gauge');
-        const display = document.getElementById('gauge-val');
+        const display = document.getElementById('confidence-percentage');
         const bounded = Math.max(0, Math.min(100, value));
         signalStrength = bounded;
         gauge.style.setProperty('--signal-progress', `${bounded * 3.6}deg`);
         gauge.classList.remove('high', 'medium', 'low', 'pulse');
-        gauge.classList.add(bounded >= 80 ? 'high' : bounded >= 50 ? 'medium' : 'low');
+        gauge.classList.add(bounded >= 75 ? 'high' : bounded >= 50 ? 'medium' : 'low');
         if (bounded >= 85) gauge.classList.add('pulse');
-        display.innerText = sampleSize < maxTickMemory ? 'WAIT' : `${bounded.toFixed(0)}%`;
+        const confidenceText = sampleSize < maxTickMemory ? 'WAIT' : `${bounded.toFixed(0)}%`;
+        display.innerText = confidenceText;
         gauge.setAttribute('aria-valuenow', bounded.toFixed(0));
         gauge.setAttribute('aria-valuetext', sampleSize < maxTickMemory ? `Gathering ${maxTickMemory - sampleSize} more ticks` : `${bounded.toFixed(0)} percent`);
     }
@@ -2234,6 +2266,94 @@
         const probability = Math.max(...counts) / windowDigits.length * 100;
         signalEma = signalEma === null ? probability : signalEma + SIGNAL_EMA_ALPHA * (probability - signalEma);
         return signalEma;
+    }
+
+    function updateContextMetrics({ digits = [], lastDigit = null, previousDigit = null, priceDelta = 0, rises = 0, falls = 0, trendTotal = 0, rangePct = '0.00', evenPct = '0', over5Pct = '0', matchPct = '0' } = {}) {
+        const labelOne = document.getElementById('context-label-one');
+        const labelTwo = document.getElementById('context-label-two');
+        const valueOne = document.getElementById('streak-counter');
+        const valueTwo = document.getElementById('parity-ratio');
+        if (!labelOne || !labelTwo || !valueOne || !valueTwo) return;
+
+        const hasData = digits.length > 0;
+        const ratio = (first, second) => `${first}% / ${second}%`;
+        let streak = 0;
+        let streakValue = 'WAITING';
+        let firstLabel = 'CURRENT STREAK';
+        let secondLabel = 'EVEN / ODD RATIO';
+        let secondValue = hasData ? ratio(evenPct, 100 - Number(evenPct)) : 'WAITING';
+
+        if (selectedMethod === 'over-under') {
+            firstLabel = 'BARRIER DISTANCE';
+            streakValue = hasData ? `${Math.abs(lastDigit - Number(document.getElementById('trade-barrier').value))} DIGIT` : 'WAITING';
+            secondLabel = 'OVER / UNDER RATIO';
+            secondValue = hasData ? ratio(over5Pct, 100 - Number(over5Pct)) : 'WAITING';
+        } else if (selectedMethod === 'match-differ') {
+            for (let index = digits.length - 1; index >= 0 && digits[index] === lastDigit; index--) streak++;
+            firstLabel = 'MATCH STREAK';
+            streakValue = hasData ? `${streak} MATCH${streak === 1 ? '' : 'ES'}` : 'WAITING';
+            secondLabel = 'MATCH / DIFFER RATIO';
+            secondValue = hasData ? ratio(matchPct, 100 - Number(matchPct)) : 'WAITING';
+        } else if (selectedMethod === 'rise-fall') {
+            const direction = priceDelta >= 0 ? 'RISE' : 'FALL';
+            for (let index = digits.length - 1; index > 0; index--) {
+                const current = Number(tickHistory[tickHistory.length - (digits.length - index)]);
+                const previous = Number(tickHistory[tickHistory.length - (digits.length - index) - 1]);
+                if ((current >= previous ? 'RISE' : 'FALL') !== direction) break;
+                streak++;
+            }
+            firstLabel = 'CURRENT TREND';
+            streakValue = hasData ? `${Math.max(1, streak)} ${direction}` : 'WAITING';
+            secondLabel = 'RISE / FALL RATIO';
+            secondValue = hasData ? ratio(((rises / Math.max(1, trendTotal)) * 100).toFixed(0), ((falls / Math.max(1, trendTotal)) * 100).toFixed(0)) : 'WAITING';
+        } else if (selectedMethod === 'accum') {
+            firstLabel = 'VOLATILITY RANGE';
+            streakValue = hasData ? `${rangePct}%` : 'WAITING';
+            secondLabel = 'CURRENT DELTA';
+            secondValue = hasData ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : 'WAITING';
+        } else {
+            for (let index = digits.length - 1; index >= 0 && digits[index] % 2 === lastDigit % 2; index--) streak++;
+            streakValue = hasData ? `${streak} ${lastDigit % 2 === 0 ? 'EVEN' : 'ODD'}` : 'WAITING';
+        }
+
+        labelOne.innerText = firstLabel;
+        labelTwo.innerText = secondLabel;
+        valueOne.innerText = streakValue;
+        valueTwo.innerText = secondValue;
+    }
+
+    function getCustomConfidence(probabilities, recentHistory = [], recentPredictions = []) {
+        const validProbabilities = probabilities.filter(Number.isFinite).map(probability => Math.max(0, probability));
+        const probabilityTotal = validProbabilities.reduce((total, probability) => total + probability, 0);
+        if (!validProbabilities.length || probabilityTotal <= 0) return 0;
+
+        const normalized = validProbabilities.map(probability => probability / probabilityTotal);
+        const entropy = normalized.reduce((total, probability) => total - (probability > 0 ? probability * Math.log2(probability) : 0), 0);
+        const certaintyScore = 1 - entropy / (Math.log2(normalized.length) || 1);
+        const predictedClass = normalized.indexOf(Math.max(...normalized));
+        const trendAgreement = recentPredictions.length
+            ? recentPredictions.filter(prediction => prediction === predictedClass).length / recentPredictions.length
+            : 0.5;
+        const flips = recentHistory.slice(1).reduce((total, direction, index) => total + (direction !== recentHistory[index] ? 1 : 0), 0);
+        const volatilityPenalty = recentHistory.length > 1 ? (flips / (recentHistory.length - 1)) * 0.35 : 0;
+        const baseConfidence = certaintyScore * 0.65 + trendAgreement * 0.35;
+        return Math.round(Math.max(0, Math.min(1, baseConfidence * (1 - volatilityPenalty))) * 100);
+    }
+
+    function updateConfidenceState(probabilities, currentDirection) {
+        tickHistoryBuffer.push(currentDirection);
+        if (tickHistoryBuffer.length > MAX_BUFFER_SIZE) tickHistoryBuffer.shift();
+
+        const predictedClass = probabilities.indexOf(Math.max(...probabilities));
+        const confidenceScore = getCustomConfidence(probabilities, tickHistoryBuffer, predictionHistoryBuffer);
+        predictionHistoryBuffer.push(predictedClass);
+        if (predictionHistoryBuffer.length > MAX_BUFFER_SIZE) predictionHistoryBuffer.shift();
+        lastModelConfidence = confidenceScore;
+        updateSignalGauge(confidenceScore, maxTickMemory);
+
+        const meetsThreshold = confidenceScore >= MIN_CONFIDENCE_THRESHOLD && confidenceScore >= confidenceThreshold;
+        setHint(`[${meetsThreshold ? 'VALID' : 'SKIP'}] Prediction ${predictedClass} confidence ${confidenceScore}% ${meetsThreshold ? 'meets' : 'below'} execution threshold ${confidenceThreshold}%.`);
+        return { confidenceScore, predictedClass, meetsThreshold };
     }
 
     function updateTradeCount() {
@@ -2322,7 +2442,7 @@
         if (!Number.isFinite(settings.stake) || settings.stake < 0.35) return 'Stake must be at least 0.35.';
         if (!Number.isInteger(settings.duration) || settings.duration < 1 || settings.duration > 10) return 'Duration must be between 1 and 10 ticks.';
         if (['DIGITOVER', 'DIGITUNDER'].includes(settings.contractType) && (!Number.isInteger(settings.barrier) || settings.barrier < 0 || settings.barrier > 9)) return 'Barrier must be a digit from 0 to 9.';
-        if (lastModelConfidence < confidenceThreshold) return `Wait for the neural model to reach ${confidenceThreshold}% confidence.`;
+        if (lastModelConfidence < MIN_CONFIDENCE_THRESHOLD || lastModelConfidence < confidenceThreshold) return `Wait for the neural model to reach ${confidenceThreshold}% custom confidence.`;
         return null;
     }
 
@@ -2591,15 +2711,6 @@
         };
     }
 
-    function updateTickVelocity(tickTimestamp) {
-        const currentTimestamp = Number(tickTimestamp) || Math.floor(Date.now() / 1000);
-        if (lastTickAt > 0 && currentTimestamp > lastTickAt) {
-            tickVelocity = 1 / (currentTimestamp - lastTickAt);
-        }
-        lastTickAt = currentTimestamp;
-        document.getElementById('tick-speed').innerText = `${tickVelocity.toFixed(1)} / sec`;
-    }
-
     function processData(latestPrice, tickTimestamp) {
         if (!tickHistory.length) return;
 
@@ -2610,7 +2721,6 @@
         }
 
         const currentPrice = latestPrice || tickHistory[tickHistory.length - 1];
-        updateTickVelocity(tickTimestamp);
         const priceText = String(currentPrice);
         const previousPrice = tickHistory.length > 1 ? Number(tickHistory[tickHistory.length - 2]) : Number(currentPrice);
         const priceDelta = Number(currentPrice) - previousPrice;
@@ -2631,6 +2741,8 @@
         const sequenceDisplay = document.getElementById('digit-sequence');
         if (sequenceDisplay) sequenceDisplay.innerText = sequence;
         const lastParity = digits[digits.length - 1] % 2;
+        const evenPercentage = ((digits.filter(digit => digit % 2 === 0).length / digits.length) * 100).toFixed(0);
+        document.getElementById('parity-ratio').innerText = `${evenPercentage}% / ${100 - Number(evenPercentage)}%`;
         let streak = 0;
         for (let index = digits.length - 1; index >= 0 && digits[index] % 2 === lastParity; index--) streak++;
         document.getElementById('streak-counter').innerText = `${streak} ${lastParity === 0 ? 'EVEN' : 'ODD'}`;
@@ -2638,8 +2750,7 @@
 
         renderPastData(digits);
 
-        // Signal Gauge Output
-        updateSignalGauge(calculateSignalStrength(digits), digits.length);
+        signalStrength = calculateSignalStrength(digits);
 
         updateStrategySignals(digits);
 
@@ -2674,25 +2785,32 @@
 
         const inputTensor = tf.tensor2d(inputs);
         const outputTensor = tf.oneHot(tf.tensor1d(outputs, 'int32'), 10);
-        if (!neuralModel) {
-            neuralModel = tf.sequential({
-                layers: [
-                    tf.layers.dense({ inputShape: [inputDigits], units: 24, activation: 'relu' }),
-                    tf.layers.dense({ units: 16, activation: 'relu' }),
-                    tf.layers.dense({ units: 10, activation: 'softmax' })
-                ]
-            });
-            neuralModel.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+        let prediction;
+        try {
+            if (!neuralModel) {
+                neuralModel = tf.sequential({
+                    layers: [
+                        tf.layers.dense({ inputShape: [inputDigits], units: 24, activation: 'relu' }),
+                        tf.layers.dense({ units: 16, activation: 'relu' }),
+                        tf.layers.dense({ units: 10, activation: 'softmax' })
+                    ]
+                });
+                neuralModel.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+            }
+            await neuralModel.fit(inputTensor, outputTensor, { epochs: 1, batchSize: 16, shuffle: true, verbose: 0 });
+            const predictionInput = tf.tensor2d([digits.slice(-inputDigits).map(digit => digit / 9)]);
+            prediction = neuralModel.predict(predictionInput);
+            predictionInput.dispose();
+            const probabilities = Array.from(await prediction.data());
+            const currentDirection = digits.length > 1
+                ? (digits[digits.length - 1] >= digits[digits.length - 2] ? 1 : 0)
+                : digits[0] % 2;
+            const { meetsThreshold } = updateConfidenceState(probabilities, currentDirection);
+            if (autoTradingEnabled && meetsThreshold) requestTradeProposal(true);
+        } finally {
+            tf.dispose([inputTensor, outputTensor, prediction]);
+            neuralTraining = false;
         }
-        await neuralModel.fit(inputTensor, outputTensor, { epochs: 1, batchSize: 16, shuffle: true, verbose: 0 });
-        const prediction = neuralModel.predict(tf.tensor2d([digits.slice(-inputDigits).map(digit => digit / 9)]));
-        const probabilities = await prediction.data();
-        const predictedDigit = probabilities.indexOf(Math.max(...probabilities));
-        const confidence = (probabilities[predictedDigit] * 100).toFixed(0);
-        lastModelConfidence = Number(confidence);
-        if (autoTradingEnabled && lastModelConfidence >= confidenceThreshold) requestTradeProposal(true);
-        tf.dispose([inputTensor, outputTensor, prediction]);
-        neuralTraining = false;
     }
 
     function updateStrategySignals(digits = tickHistory.map(p => parseInt(p.toString().slice(-1)))) {
@@ -2718,8 +2836,6 @@
         const rangePct = average ? ((range / average) * 100).toFixed(2) : '0.00';
         const priceDelta = priceValues.length > 1 ? priceValues[priceValues.length - 1] - priceValues[priceValues.length - 2] : 0;
 
-        updateWatchedTarget(recentDigits, lastDigit, priceDelta, rangePct);
-
         const signalOne = selectedMethod === 'rise-fall'
             ? (priceDelta >= 0 ? `RISE ${((rises / trendTotal) * 100).toFixed(0)}%` : `FALL ${((falls / trendTotal) * 100).toFixed(0)}%`)
             : selectedMethod === 'accum' ? `ACTIVE ${rangePct}%` : selectedMethod === 'match-differ' ? (lastDigit === previousDigit ? 'MATCH' : 'DIFFER') : selectedMethod === 'over-under' ? overUnderValue : evenOddValue;
@@ -2731,21 +2847,7 @@
         document.getElementById('evenodd-val').innerText = signalOne;
         document.getElementById('overunder-val').innerText = signalTwo;
         document.getElementById('matches-val').innerText = signalThree;
-    }
-
-    function updateWatchedTarget(recentDigits = [], lastDigit = '-', priceDelta = 0, rangePct = '0.00') {
-        const watched = document.getElementById('watched-value');
-        if (selectedMethod === 'even-odd' || selectedMethod === 'match-differ') {
-            watched.innerText = lastDigit;
-        } else if (selectedMethod === 'over-under') {
-            watched.innerText = document.getElementById('trade-barrier').value;
-        } else if (selectedMethod === 'rise-fall') {
-            watched.innerText = priceDelta >= 0 ? 'RISE' : 'FALL';
-        } else if (selectedMethod === 'accum') {
-            watched.innerText = `${rangePct}%`;
-        } else {
-            watched.innerText = '-';
-        }
+        updateContextMetrics({ digits, lastDigit, previousDigit, priceDelta, rises, falls, trendTotal, rangePct, evenPct, over5Pct, matchPct });
     }
 
     function setPastDataState(state, title, message) {
@@ -3073,6 +3175,7 @@
     showView('home');
     loadDerivedMarkets();
     updateMethodPresentation();
+    setConfidenceThreshold(confidenceThreshold);
     updateTradeCount();
     updateTradeStats();
     updateSession();
