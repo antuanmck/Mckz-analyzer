@@ -1,0 +1,29 @@
+{
+  "workbench.colorCustomizations": {
+    "editor.background": "#0a0e14",
+    "sideBar.background": "#0d1117",
+    "activityBar.background": "#0a0e14",
+    "statusBar.background": "#06090e",
+    "titleBar.activeBackground": "#0a0e14",
+    "panel.background": "#0d1117",
+    "sideBar.border": "rgba(255, 255, 255, 0.08)",
+    "panel.border": "rgba(255, 255, 255, 0.08)",
+    "activityBar.border": "rgba(255, 255, 255, 0.08)",
+    "editorGroupHeader.tabsBackground": "#0a0e14",
+    "tab.activeBackground": "rgba(41, 182, 246, 0.15)",
+    "tab.activeForeground": "#29b6f6",
+    "tab.activeBorder": "#29b6f6",
+    "tab.inactiveBackground": "rgba(255, 255, 255, 0.03)",
+    "tab.inactiveForeground": "#8b949e",
+    "button.background": "#00e676",
+    "button.foreground": "#000000",
+    "editor.foreground": "#f0f6fc",
+    "focusBorder": "#29b6f6",
+    "list.activeSelectionBackground": "rgba(41, 182, 246, 0.2)",
+    "list.activeSelectionForeground": "#29b6f6",
+    "list.hoverBackground": "rgba(255, 255, 255, 0.04)",
+    "statusBar.foreground": "#8b949e",
+    "badge.background": "#f5c027",
+    "badge.foreground": "#000000"
+  }
+}

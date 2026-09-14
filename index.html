@@ -7,29 +7,32 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
     <style>
         :root {
-            --bg-body: #06080d;
-            --panel-bg: #0d1017;
-            --panel-border: #161b26;
-            --card-inner: #111520;
-            --text-main: #f0f4f8;
-            --text-muted: #5c687a;
+            --bg-body: #0a0e14;
+            --panel-bg: rgba(22, 27, 34, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --card-inner: rgba(13, 17, 23, 0.8);
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
             --accent-green: #00e676;
             --accent-red: #ff5252;
-            --accent-blue: #2979ff;
-            --accent-gold: #ffd600;
+            --accent-blue: #29b6f6;
+            --accent-gold: #f5c027;
+            --font-mono: "JetBrains Mono", "Fira Code", monospace;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
             background-color: var(--bg-body);
+            background-image: linear-gradient(105deg, rgba(22, 89, 142, 0.34) 0%, rgba(10, 14, 20, 0.72) 45%, rgba(126, 94, 18, 0.28) 100%), radial-gradient(circle at 18% 12%, rgba(41, 182, 246, 0.15) 0%, transparent 34%), radial-gradient(circle at 88% 16%, rgba(245, 192, 39, 0.12) 0%, transparent 32%);
+            background-attachment: fixed;
             color: var(--text-main);
-            padding: 24px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             min-width: 320px;
@@ -38,10 +41,10 @@
 
         .app-wrapper {
             width: 100%;
-            max-width: 1240px;
+            max-width: 1260px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
         }
 
         /* Top Bar */
@@ -51,8 +54,9 @@
             align-items: center;
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            padding: 14px 24px;
-            border-radius: 10px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
         .top-nav {
@@ -74,8 +78,8 @@
 
         .top-nav button:hover,
         .top-nav button.active {
-            background: #202631;
-            border-color: var(--panel-border);
+            background: rgba(41, 182, 246, 0.15);
+            border-color: var(--accent-blue);
             color: var(--text-main);
         }
 
@@ -199,7 +203,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             padding: 18px;
-            background: #080b11;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--panel-border);
             border-radius: 10px;
         }
@@ -275,27 +279,37 @@
         .brand-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .brand-logo .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: #182030;
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, #182030, #0b1018);
+            border: 1px solid rgba(41, 182, 246, 0.3);
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             color: var(--accent-blue);
             overflow: hidden;
+            box-shadow: 0 0 18px rgba(41, 182, 246, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
         .brand-logo .logo-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 88%;
+            height: 88%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .brand-title h1 {
+            color: var(--text-main);
+            font-size: 1.22rem;
+            letter-spacing: 1.4px;
+            line-height: 1;
+            text-shadow: 0 0 14px rgba(240, 246, 252, 0.12);
         }
 
         .market-controls {
@@ -371,8 +385,8 @@
             gap: 4px;
             background: #080b11;
             border: 1px solid var(--panel-border);
-            padding: 4px;
-            border-radius: 8px;
+            padding: 3px;
+            border-radius: 7px;
         }
 
         .method-tab {
@@ -380,8 +394,8 @@
             border-radius: 4px;
             background: transparent;
             color: var(--text-muted);
-            padding: 9px 14px;
-            font-size: 0.72rem;
+            padding: 7px 12px;
+            font-size: 0.66rem;
             font-weight: 700;
             cursor: pointer;
             white-space: nowrap;
@@ -389,12 +403,13 @@
 
         .method-tab:hover,
         .method-tab.active {
-            background: #202631;
-            color: var(--accent-gold);
+            background: rgba(41, 182, 246, 0.15);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
         }
 
         select {
-            background: var(--card-inner);
+            background: rgba(13, 17, 23, 0.8);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
             padding: 10px 16px;
@@ -405,17 +420,24 @@
             cursor: pointer;
         }
 
+        input:focus,
+        select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 8px rgba(41, 182, 246, 0.3);
+        }
+
         .btn-primary {
-            background: #ffffff;
+            background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
             color: #000000;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 16px;
             border-radius: 8px;
             font-weight: 800;
             font-size: 0.8rem;
             letter-spacing: 0.5px;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
         }
 
         .btn-primary:hover {
@@ -427,29 +449,32 @@
         .dashboard-layout {
             display: grid;
             grid-template-columns: 2.2fr 1fr;
-            gap: 20px;
+            gap: 12px;
             min-width: 0;
         }
 
         .left-column, .right-column {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
             min-width: 0;
         }
 
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 9px;
+            padding: 12px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
         /* Market Intensity Header Panel */
         .intensity-card {
             display: grid;
             grid-template-columns: minmax(0, 1.8fr) minmax(128px, 1.1fr) minmax(112px, 0.9fr);
-            gap: 14px;
+            gap: 10px;
             align-items: center;
             overflow: hidden;
         }
@@ -567,28 +592,30 @@
         /* Circular Signal Gauge */
         .signal-gauge {
             --signal-progress: 0deg;
-            width: 130px;
-            height: 130px;
+            width: 124px;
+            height: 124px;
             max-width: 100%;
             box-sizing: border-box;
             flex-shrink: 0;
             border-radius: 50%;
-            background: conic-gradient(var(--signal-color, #334155) var(--signal-progress), #18212e 0deg);
+            background: conic-gradient(from -90deg, var(--signal-color, #334155) var(--signal-progress), rgba(35, 47, 63, 0.9) 0deg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 0 rgba(16, 185, 129, 0);
+            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
         }
 
         .signal-gauge::before {
             content: "";
             position: absolute;
-            inset: 6px;
+            inset: 7px;
             border-radius: 50%;
-            background: var(--panel-bg);
+            background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.07), transparent 38%), #121923;
+            box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 255, 255, 0.04);
         }
 
         .signal-gauge > * {
@@ -597,16 +624,16 @@
         }
 
         .signal-gauge.high {
-            --signal-color: #10b981;
-            box-shadow: 0 0 22px rgba(16, 185, 129, 0.28);
+            --signal-color: var(--accent-gold);
+            box-shadow: 0 0 28px rgba(245, 192, 39, 0.36), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
 
         .signal-gauge.medium {
-            --signal-color: #f59e0b;
+            --signal-color: var(--accent-gold);
         }
 
         .signal-gauge.low {
-            --signal-color: #ef4444;
+            --signal-color: var(--accent-red);
         }
 
         .signal-gauge.pulse {
@@ -618,21 +645,25 @@
         }
 
         .signal-gauge .gauge-value {
-            font-size: 2rem;
-            font-weight: 800;
+            font-family: var(--font-mono);
+            font-size: 2.05rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0.5px;
             transition: color 0.3s ease;
         }
 
-        .signal-gauge.high .gauge-value { color: #00ff88; }
-        .signal-gauge.medium .gauge-value { color: #ffaa00; }
+        .signal-gauge.high .gauge-value { color: var(--accent-gold); text-shadow: 0 0 12px rgba(245, 192, 39, 0.3); }
+        .signal-gauge.medium .gauge-value { color: var(--accent-gold); }
         .signal-gauge.low .gauge-value { color: #ff4444; }
 
         .signal-gauge .gauge-sub {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: var(--text-muted);
-            letter-spacing: 1px;
+            letter-spacing: 0.9px;
             font-weight: 700;
-            margin-top: 4px;
+            margin-top: 7px;
+            text-align: center;
         }
 
         .past-data-box {
@@ -953,9 +984,9 @@
         .danger-button {
             width: 100%;
             margin-top: 10px;
-            background: rgba(255, 82, 82, 0.12);
-            border: 1px solid rgba(255, 82, 82, 0.4);
-            color: var(--accent-red);
+            background: linear-gradient(135deg, #d50000 0%, #ff5252 100%);
+            border: 0;
+            color: #fff;
             border-radius: 8px;
             padding: 10px;
             font-size: 0.7rem;
@@ -1244,7 +1275,7 @@
         }
 
         .hint-box {
-            background: var(--card-inner);
+            background: #06090e;
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 14px;
@@ -1300,6 +1331,15 @@
             font-size: 0.68rem;
             line-height: 1.5;
             color: #aab5c6;
+        }
+
+        .hint-entry.skip {
+            color: #ffb74d;
+        }
+
+        .hint-entry.success,
+        .hint-entry.met {
+            color: var(--accent-green);
         }
 
         .hint-entry.error {
@@ -1432,6 +1472,76 @@
             margin-top: 10px;
         }
 
+        /* Compact reference layout */
+        #analyzer-view .panel-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .price-hero {
+            font-size: clamp(1.75rem, 3.3vw, 2.65rem);
+        }
+
+        .price-delta {
+            color: var(--accent-red) !important;
+            font-size: 0.68rem;
+        }
+
+        .signal-gauge .gauge-value {
+            font-family: var(--font-mono, monospace);
+            font-size: 1.75rem;
+        }
+
+        .past-data-box,
+        .signal-box,
+        .ops-stat,
+        .trade-stat {
+            border-radius: 6px;
+        }
+
+        .past-data-box {
+            padding: 10px;
+        }
+
+        .sequence-token {
+            min-width: 19px;
+            height: 19px;
+            border-radius: 4px;
+            font-size: 0.58rem;
+        }
+
+        .hint-box {
+            min-height: 150px;
+            padding: 10px;
+            background: rgba(8, 11, 15, 0.92);
+            border-color: rgba(245, 192, 39, 0.18);
+        }
+
+        .hint-current,
+        .hint-entry {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.62rem;
+        }
+
+        .hint-current,
+        .hint-entry.skip {
+            color: #f5c027;
+        }
+
+        .hint-history-list {
+            max-height: 150px;
+        }
+
+        .execution-note {
+            border-left-color: var(--accent-gold);
+            background: rgba(245, 192, 39, 0.08);
+        }
+
+        .right-column .panel {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+        }
+
         @media (max-width: 900px) {
             body {
                 padding: 14px;
@@ -1547,7 +1657,6 @@
             <div class="logo-icon"><img src="logo.png" alt="MCKZAI bot logo"></div>
             <div class="brand-title">
                 <h1>MCKZAI</h1>
-                <span>NEURAL TICK ENGINE V2.0</span>
             </div>
         </div>
         <nav class="top-nav" aria-label="Primary navigation">
