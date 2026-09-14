@@ -426,6 +426,15 @@
             box-shadow: 0 0 8px rgba(41, 182, 246, 0.3);
         }
 
+        #api-token.api-attention {
+            border-color: var(--accent-red) !important;
+            animation: api-token-pulse 1.1s ease-in-out 3;
+        }
+
+        @keyframes api-token-pulse {
+            50% { box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.22), 0 0 18px rgba(255, 82, 82, 0.5); }
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
             color: #000000;
@@ -1275,7 +1284,7 @@
         }
 
         .hint-box {
-            background: #06090e;
+            background: #131722;
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             padding: 14px;
@@ -1304,6 +1313,16 @@
             margin: 10px 0 6px;
         }
 
+        .hint-filter-tabs { display: flex; gap: 5px; align-items: center; margin: 10px 0 7px; }
+        .hint-filter-tab {
+            border: 1px solid #363c4e; border-radius: 5px; background: #2a2e39;
+            color: var(--text-muted); padding: 4px 7px; font-family: var(--font-mono);
+            font-size: 0.52rem; font-weight: 800; cursor: pointer;
+        }
+        .hint-filter-tab:hover, .hint-filter-tab.active { border-color: var(--accent-blue); background: rgba(41, 98, 255, 0.2); color: #fff; }
+        .hint-filter-tab[data-filter="errors"] { color: var(--accent-red); }
+        .hint-filter-tab[data-filter="clear"] { margin-left: auto; color: var(--accent-amber, #ffb300); }
+
         .hint-clear {
             border: 0;
             background: transparent;
@@ -1321,17 +1340,40 @@
             display: flex;
             flex-direction: column;
             gap: 7px;
-            max-height: 190px;
+            max-height: 200px;
             overflow-y: auto;
+            scrollbar-color: #363c4e #131722;
+            scrollbar-width: thin;
         }
+        .hint-history-list::-webkit-scrollbar { width: 7px; }
+        .hint-history-list::-webkit-scrollbar-track { background: #131722; }
+        .hint-history-list::-webkit-scrollbar-thumb { background: #363c4e; border-radius: 5px; }
 
         .hint-entry {
             border-left: 2px solid var(--panel-border);
             padding-left: 8px;
             font-size: 0.68rem;
             line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
             color: #aab5c6;
+            font-family: var(--font-mono);
         }
+
+        .hint-entry time { flex: 0 0 auto; padding: 2px 4px; border-radius: 3px; background: #2a2e39; color: var(--text-muted); font-size: 0.54rem; }
+        .hint-entry .event-badge { flex: 0 0 auto; padding: 2px 4px; border-radius: 3px; font-size: 0.5rem; font-weight: 900; }
+        .hint-entry .event-message { min-width: 0; }
+        .hint-entry.info { border-left-color: var(--accent-blue); color: #9ecbff; }
+        .hint-entry.info .event-badge { background: rgba(41, 98, 255, 0.2); color: #82aaff; }
+        .hint-entry.skip { border-left-color: #787b86; color: #a0a3ad; }
+        .hint-entry.skip .event-badge { background: rgba(120, 123, 134, 0.2); color: #b4b7c0; }
+        .hint-entry.warn { border-left-color: #ffb300; color: #ffca28; }
+        .hint-entry.warn .event-badge { background: rgba(255, 179, 0, 0.18); color: #ffb300; }
+        .hint-entry.error { border-left-color: var(--accent-red); color: #ff8a80; }
+        .hint-entry.error .event-badge { background: rgba(255, 82, 82, 0.18); color: #ff5252; }
+        .hint-entry.success { border-left-color: var(--accent-green); color: #69f0ae; }
+        .hint-entry.success .event-badge { background: rgba(0, 230, 118, 0.18); color: #00e676; }
 
         .hint-entry.skip {
             color: #ffb74d;
@@ -1524,13 +1566,12 @@
             font-size: 0.62rem;
         }
 
-        .hint-current,
-        .hint-entry.skip {
+        .hint-current {
             color: #f5c027;
         }
 
         .hint-history-list {
-            max-height: 150px;
+            max-height: 200px;
         }
 
         .execution-note {
@@ -1540,6 +1581,240 @@
 
         .right-column .panel {
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+        }
+
+        /* Engine controls reference styling */
+        .engine-config-panel {
+            background: #131722;
+            border-color: #363c4e;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .engine-config-heading {
+            min-height: 28px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #363c4e;
+            color: #fff;
+            font-size: 0.72rem;
+        }
+
+        .engine-config-heading::after {
+            content: "LIVE";
+            padding: 3px 8px;
+            border: 1px solid var(--accent-green);
+            border-radius: 20px;
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--accent-green);
+            font-size: 0.55rem;
+            letter-spacing: 0.5px;
+        }
+
+        .engine-config-panel .config-row,
+        .engine-config-panel .prediction-control,
+        .engine-config-panel .risk-settings,
+        .engine-config-panel .trade-settings,
+        .engine-config-panel .risk-check,
+        .engine-config-panel .trade-actions,
+        .engine-config-panel .execution-note,
+        .engine-config-panel > #confirm-trade,
+        .engine-config-panel > .btn-secondary {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .engine-config-panel .config-row {
+            min-height: 36px;
+            border-bottom: 1px solid rgba(54, 60, 78, 0.7);
+            color: var(--text-muted);
+            font-size: 0.68rem;
+        }
+
+        .engine-config-panel .config-row > span:first-child {
+            color: var(--text-muted) !important;
+            font-weight: 500;
+        }
+
+        .engine-config-panel select,
+        .engine-config-panel input[type="number"] {
+            background: #2a2e39;
+            border-color: #363c4e;
+            border-radius: 6px;
+        }
+
+        .engine-config-panel .memory-select {
+            min-width: 142px;
+            height: 30px;
+            padding: 6px 9px;
+            font-size: 0.62rem;
+        }
+
+        .engine-config-panel .toggle-control {
+            width: 38px;
+            height: 20px;
+        }
+
+        .engine-config-panel .toggle-slider {
+            background: #2a2e39;
+            border-color: #363c4e;
+        }
+
+        .engine-config-panel .toggle-control input:checked + .toggle-slider {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .engine-config-panel .toggle-control input:checked + .toggle-slider::before {
+            background: #000;
+        }
+
+        .engine-config-panel .trade-limit-control {
+            width: 100px;
+            height: 28px;
+            gap: 0;
+            overflow: hidden;
+            border: 1px solid #363c4e;
+            border-radius: 6px;
+            background: #2a2e39;
+        }
+
+        .engine-config-panel .trade-limit-control input {
+            width: 44px;
+            height: 26px;
+            background: transparent;
+            color: #fff;
+            font-size: 0.7rem;
+        }
+
+        .engine-config-panel .stepper-button {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 0;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .engine-config-panel .prediction-control {
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid #363c4e;
+            border-radius: 8px;
+            background: #1e222d;
+        }
+
+        .engine-config-panel .prediction-control header {
+            font-size: 0.6rem;
+        }
+
+        .engine-config-panel .prediction-control input {
+            margin: 10px 0 7px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent-green) var(--slider-progress, 0%), #363c4e var(--slider-progress, 0%));
+        }
+
+        .engine-config-panel .prediction-control input::-webkit-slider-thumb,
+        .engine-config-panel .prediction-control input::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--accent-green);
+        }
+
+        .engine-config-panel .prediction-control footer {
+            font-size: 0.5rem;
+        }
+
+        .engine-config-panel .auto-trade-status {
+            min-height: 1.7em;
+            margin-top: 5px;
+            color: var(--accent-amber, #ffb300);
+            font-size: 0.58rem;
+        }
+
+        .engine-config-panel .config-section-label {
+            margin: 14px 0 6px;
+            color: var(--accent-amber, #ffb300);
+            font-size: 0.56rem;
+        }
+
+        .engine-config-panel .risk-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 0;
+            padding: 10px;
+            border-color: #363c4e;
+            border-radius: 8px;
+            background: #1e222d;
+        }
+
+        .engine-config-panel .risk-settings label,
+        .engine-config-panel .trade-settings label {
+            color: var(--text-muted);
+            font-size: 0.53rem;
+        }
+
+        .engine-config-panel .risk-settings input,
+        .engine-config-panel .trade-settings input,
+        .engine-config-panel .trade-settings select {
+            height: 30px;
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: #2a2e39;
+            color: #fff;
+            font-size: 0.68rem;
+        }
+
+        .engine-config-panel .trade-settings {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 0;
+        }
+
+        .engine-config-panel .trade-settings #contract-field {
+            grid-column: 1 / -1;
+        }
+
+        .engine-config-panel .risk-check {
+            margin-top: 10px;
+            font-size: 0.55rem;
+        }
+
+        .engine-config-panel .trade-actions {
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .engine-config-panel .trade-actions .btn-secondary {
+            min-height: 36px;
+            padding: 8px 6px;
+            border-radius: 6px;
+            background: #2a2e39;
+            border-color: #363c4e;
+            color: #fff;
+            font-size: 0.62rem;
+        }
+
+        .engine-config-panel .trade-actions .btn-secondary:nth-child(2) {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #000;
+        }
+
+        .engine-config-panel .trade-actions .btn-secondary:last-child,
+        .engine-config-panel .danger-button {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            color: #fff;
+        }
+
+        .engine-config-panel > .btn-secondary:last-child {
+            border: 1px dashed #363c4e;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.58rem;
         }
 
         @media (max-width: 900px) {
@@ -1881,7 +2156,7 @@
                     Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
                     <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
                 </div>
-                <div class="config-section-label">RISK CONTROL</div>
+                <div class="config-section-label">RISK MANAGEMENT</div>
                 <div class="risk-settings">
                     <label>STOP LOSS (USD)
                         <input id="stop-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
@@ -1944,9 +2219,14 @@
                 <div class="panel-label">📊 Hint Log</div>
                 <div id="hint-log" class="hint-box">
                     <div id="hint-current" class="hint-current">Gathering tick intelligence... Need 20 more data points for reliable signals.</div>
+                    <div class="hint-filter-tabs" role="toolbar" aria-label="Event log filters">
+                        <button class="hint-filter-tab active" data-filter="all" type="button" onclick="setHintFilter('all', this)">ALL</button>
+                        <button class="hint-filter-tab" data-filter="signals" type="button" onclick="setHintFilter('signals', this)">SIGNALS</button>
+                        <button class="hint-filter-tab" data-filter="errors" type="button" onclick="setHintFilter('errors', this)">ERRORS</button>
+                        <button class="hint-filter-tab" data-filter="clear" type="button" onclick="clearHintHistory()">CLEAR</button>
+                    </div>
                     <div class="hint-history-header">
                         <span>EVENT HISTORY</span>
-                        <button class="hint-clear" type="button" onclick="clearHintHistory()">CLEAR</button>
                     </div>
                     <div id="hint-history-list" class="hint-history-list"></div>
                 </div>
@@ -2566,10 +2846,12 @@
     }
 
     function manualTrade() {
+        if (!ensureApiConnectionForTrade()) return;
         requestTradeProposal(false);
     }
 
     function startAutoTrading() {
+        if (!ensureApiConnectionForTrade()) return;
         if (lossStreakLocked) {
             setAutoTradeStatus('AUTO-TRADING BLOCKED · RESET LOSS LOCK FIRST', false);
             setHint('Auto-trading cannot restart until the max loss streak lock is reset.');
@@ -2578,6 +2860,22 @@
         toggleAutoTrading(true);
         document.getElementById('autotrade-toggle').checked = true;
         setHint(`Automatic trading armed for up to ${autoTradeLimit} trade${autoTradeLimit === 1 ? '' : 's'}. It will wait for authorization, risk acknowledgement, and ${confidenceThreshold}% confidence.`);
+    }
+
+    function ensureApiConnectionForTrade() {
+        const tokenInput = document.getElementById('api-token');
+        const hasToken = Boolean(authToken || tokenInput?.value.trim());
+        const connected = isAuthorized && apiWs && apiWs.readyState === WebSocket.OPEN;
+        if (connected && hasToken) return true;
+        const apiSection = document.getElementById('api-execution');
+        apiSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        tokenInput?.classList.remove('api-attention');
+        window.requestAnimationFrame(() => {
+            tokenInput?.classList.add('api-attention');
+            tokenInput?.focus();
+        });
+        setHint('⚠️ Execution Blocked: Please connect your Deriv API token to place trades.');
+        return false;
     }
 
     function stopAutoTradingWithReason(message) {
@@ -2652,6 +2950,7 @@
     }
 
     function requestTradeProposal(isAutomatic) {
+        if (!ensureApiConnectionForTrade()) return;
         if (isAutomatic && !canPlaceAutomaticTrade()) {
             stopAutoTrading(`Automatic trading stopped after reaching the ${autoTradeLimit}-trade limit.`);
             return;
@@ -3322,24 +3621,43 @@
         };
     }
 
+    let hintLogFilter = 'all';
+
+    function classifyHint(message) {
+        const normalizedMessage = message.toLowerCase();
+        if (/\[error\]|api error|unable to|authorization failed|connection lost|websocket|invalid|failed/.test(normalizedMessage)) return 'error';
+        if (/\[warn\]|⚠️|blocked|disconnected|canceled|cancelled|token|reconnect/.test(normalizedMessage)) return 'warn';
+        if (/\[skip\]|below execution|below .* threshold/.test(normalizedMessage)) return 'skip';
+        if (/\[success\]|connected|synchronized|placed|executed|confirmed|target hit|live data/.test(normalizedMessage)) return 'success';
+        return 'info';
+    }
+
+    function setHintFilter(filter, button) {
+        if (filter === 'clear') return clearHintHistory();
+        hintLogFilter = filter;
+        document.querySelectorAll('.hint-filter-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.filter === filter));
+        document.querySelectorAll('#hint-history-list .hint-entry').forEach(entry => {
+            const visible = filter === 'all' || (filter === 'signals' && ['info', 'skip', 'success'].includes(entry.dataset.type)) || (filter === 'errors' && ['warn', 'error'].includes(entry.dataset.type));
+            entry.hidden = !visible;
+        });
+    }
+
     function setHint(message) {
         const current = document.getElementById('hint-current');
         const history = document.getElementById('hint-history-list');
         if (!current || !history) return;
         current.innerText = message;
         const entry = document.createElement('div');
-        const normalizedMessage = message.toLowerCase();
-        const eventType = normalizedMessage.includes('error') || normalizedMessage.includes('blocked') || normalizedMessage.includes('failed')
-            ? 'error'
-            : normalizedMessage.includes('connected') || normalizedMessage.includes('synchronized') || normalizedMessage.includes('placed')
-                ? 'success'
-                : normalizedMessage.includes('trade') || normalizedMessage.includes('proposal')
-                    ? 'trade'
-                    : '';
+        const eventType = classifyHint(message);
+        const eventLabel = eventType.toUpperCase();
         entry.className = `hint-entry ${eventType}`;
-        entry.innerHTML = `<time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>${message}`;
+        entry.dataset.type = eventType;
+        entry.innerHTML = `<time>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time><span class="event-badge">[${eventLabel}]</span><span class="event-message"></span>`;
+        entry.querySelector('.event-message').textContent = message;
         history.prepend(entry);
+        setHintFilter(hintLogFilter, document.querySelector(`.hint-filter-tab[data-filter="${hintLogFilter}"]`));
         while (history.children.length > 30) history.lastElementChild.remove();
+        history.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function setTradeEvent(message) {
@@ -3348,7 +3666,8 @@
 
     function clearHintHistory() {
         document.getElementById('hint-history-list').innerHTML = '';
-        setHint('Hint history cleared.');
+        const current = document.getElementById('hint-current');
+        if (current) current.innerText = 'Hint history cleared.';
     }
 
     function clearApiStatus() {
