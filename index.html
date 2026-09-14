@@ -1930,6 +1930,7 @@
     let maxTickMemory = 100;
     let activeSignalWindow = 15;
     let lastSignalDirection = '';
+    let activePrediction = { type: 'NONE', confidence: 0, method: 'NONE', hotDigit: -1 };
     let tradeHistory = [];
     let lossStreak = 0;
     let lossStreakLocked = false;
@@ -2165,7 +2166,13 @@
         document.getElementById('selected-method').innerText = `ACTIVE METHOD: ${labels[method]}`;
         updateMethodPresentation();
         renderPastData();
-        updateStrategySignals();
+        if (tickHistory.length) {
+            const digits = tickHistory.map(price => parseInt(price.toString().slice(-1), 10));
+            updateStrategySignals(digits);
+            updateActivePredictionUI();
+        } else {
+            updateActivePredictionUI({ type: 'NONE', confidence: 0, method: method.toUpperCase() });
+        }
     }
 
     function updateMethodPresentation() {
@@ -2314,6 +2321,53 @@
         return { score, direction, hotDigit };
     }
 
+    function getActiveSignalWindow() {
+        return shortBuffers[activeSignalWindow === 15 ? 'micro' : activeSignalWindow === 30 ? 'fast' : 'macro'];
+    }
+
+    function getHotDigitEWMA(tickData) {
+        if (!tickData.length) return { digit: -1, score: 0 };
+        const scores = Array(10).fill(0).map((_, digit) => calculateEwma(tickData, tick => tick.digit === digit));
+        const digit = scores.indexOf(Math.max(...scores));
+        return { digit, score: scores[digit] * 100 };
+    }
+
+    function getActivePredictionConfidence(tickData = getActiveSignalWindow(), activeTab = selectedMethod) {
+        if (!tickData.length) return { type: 'NONE', confidence: 0, method: activeTab.toUpperCase(), hotDigit: -1 };
+        if (activeTab === 'even-odd') {
+            const evenRatio = calculateEwma(tickData, tick => tick.digit % 2 === 0);
+            return { type: evenRatio >= 0.5 ? 'EVEN' : 'ODD', confidence: Math.round(Math.max(evenRatio, 1 - evenRatio) * 100), method: 'EVEN_ODD', hotDigit: -1 };
+        }
+        if (activeTab === 'over-under') {
+            const overRatio = calculateEwma(tickData, tick => tick.digit >= 5);
+            return { type: overRatio >= 0.5 ? 'OVER 5' : 'UNDER 5', confidence: Math.round(Math.max(overRatio, 1 - overRatio) * 100), method: 'OVER_UNDER', hotDigit: -1 };
+        }
+        if (activeTab === 'match-differ') {
+            const hotDigit = getHotDigitEWMA(tickData);
+            return { type: hotDigit.digit >= 0 ? `MATCH ${hotDigit.digit}` : 'NONE', confidence: Math.round(hotDigit.score), method: 'MATCH_DIFFER', hotDigit: hotDigit.digit };
+        }
+        const generic = calculateSignalStrength();
+        return { type: generic.direction || 'NONE', confidence: Math.round(generic.score), method: activeTab.toUpperCase().replace('-', '_'), hotDigit: generic.hotDigit };
+    }
+
+    function updateActivePredictionUI(prediction = getActivePredictionConfidence()) {
+        activePrediction = prediction;
+        signalStrength = prediction.confidence;
+        updateSignalGauge(prediction.confidence, getActiveSignalWindow().length);
+        const activeSignal = document.getElementById('matches-val');
+        if (activeSignal) activeSignal.innerText = prediction.confidence ? `${prediction.confidence}% ${prediction.type}` : 'WAIT';
+        document.getElementById('matches-dot')?.style.setProperty('background', prediction.confidence >= 75 ? 'var(--accent-green)' : prediction.confidence >= 50 ? 'var(--accent-gold)' : 'var(--text-muted)');
+        return prediction;
+    }
+
+    function evaluateExecutionFilter(prediction = activePrediction, shouldLog = true) {
+        const meetsThreshold = prediction.confidence >= MIN_SIGNAL_FOR_TRADE && prediction.confidence >= confidenceThreshold;
+        if (shouldLog) {
+            setHint(`[${meetsThreshold ? 'VALID' : 'SKIP'}] ${prediction.type} confidence ${prediction.confidence}% ${meetsThreshold ? 'meets' : 'below'} execution threshold ${confidenceThreshold}%.`);
+        }
+        return meetsThreshold;
+    }
+
     function updateContextMetrics({ digits = [], lastDigit = null, previousDigit = null, priceDelta = 0, rises = 0, falls = 0, trendTotal = 0, rangePct = '0.00', evenPct = '0', over5Pct = '0', matchPct = '0' } = {}) {
         const labelOne = document.getElementById('context-label-one');
         const labelTwo = document.getElementById('context-label-two');
@@ -2395,11 +2449,7 @@
         predictionHistoryBuffer.push(predictedClass);
         if (predictionHistoryBuffer.length > MAX_BUFFER_SIZE) predictionHistoryBuffer.shift();
         lastModelConfidence = confidenceScore;
-        updateSignalGauge(confidenceScore, maxTickMemory);
-
-        const meetsThreshold = confidenceScore >= MIN_CONFIDENCE_THRESHOLD && confidenceScore >= confidenceThreshold;
-        setHint(`[${meetsThreshold ? 'VALID' : 'SKIP'}] Prediction ${predictedClass} confidence ${confidenceScore}% ${meetsThreshold ? 'meets' : 'below'} execution threshold ${confidenceThreshold}%.`);
-        return { confidenceScore, predictedClass, meetsThreshold };
+        return { confidenceScore, predictedClass, meetsThreshold: evaluateExecutionFilter(activePrediction, false) };
     }
 
     function updateTradeCount() {
@@ -2488,7 +2538,7 @@
         if (!Number.isFinite(settings.stake) || settings.stake < 0.35) return 'Stake must be at least 0.35.';
         if (!Number.isInteger(settings.duration) || settings.duration < 1 || settings.duration > 10) return 'Duration must be between 1 and 10 ticks.';
         if (['DIGITOVER', 'DIGITUNDER'].includes(settings.contractType) && (!Number.isInteger(settings.barrier) || settings.barrier < 0 || settings.barrier > 9)) return 'Barrier must be a digit from 0 to 9.';
-        if (lastModelConfidence < MIN_CONFIDENCE_THRESHOLD || lastModelConfidence < confidenceThreshold) return `Wait for the neural model to reach ${confidenceThreshold}% custom confidence.`;
+        if (!evaluateExecutionFilter(activePrediction, false)) return `Wait for ${activePrediction.type} to reach ${confidenceThreshold}% active confidence.`;
         return null;
     }
 
@@ -2806,19 +2856,19 @@
         renderPastData(digits);
 
         const signal = calculateSignalStrength();
-        signalStrength = signal.score;
-        lastSignalDirection = signal.direction;
-        updateSignalGauge(signal.score, shortBuffers.macro.length);
+        const prediction = updateActivePredictionUI();
+        signalStrength = prediction.confidence;
+        lastSignalDirection = prediction.type;
 
         updateStrategySignals(digits);
 
-        const tradeReady = signal.score >= Math.max(MIN_SIGNAL_FOR_TRADE, confidenceThreshold);
+        const tradeReady = evaluateExecutionFilter(prediction, true);
         if (signal.hotDigit >= 0) {
-            setHint(`HOT DIGIT ${signal.hotDigit} detected. EWMA score ${signal.score.toFixed(0)}% with ${activeSignalWindow}-tick sensitivity.`);
+            setHint(`HOT DIGIT ${signal.hotDigit} detected. ${prediction.type} confidence ${prediction.confidence}% with ${activeSignalWindow}-tick sensitivity.`);
         } else if (shortBuffers.micro.length < 5) {
             setHint(`Gathering short-memory tick intelligence... ${5 - shortBuffers.micro.length} more ticks for a live score.`);
         } else {
-            setHint(`EWMA ${signal.direction} score ${signal.score.toFixed(0)}% · ${activeSignalWindow}-tick sensitivity${tradeReady ? ' · execution threshold met' : ''}.`);
+            setHint(`EWMA ${prediction.type} confidence ${prediction.confidence}% · ${activeSignalWindow}-tick sensitivity${tradeReady ? ' · execution threshold met' : ''}.`);
         }
         if (autoTradingEnabled && tradeReady && Number.isFinite(tickTimestamp) && lastTradeAt !== tickTimestamp) {
             lastTradeAt = tickTimestamp;
@@ -2870,8 +2920,7 @@
             const currentDirection = digits.length > 1
                 ? (digits[digits.length - 1] >= digits[digits.length - 2] ? 1 : 0)
                 : digits[0] % 2;
-            const { meetsThreshold } = updateConfidenceState(probabilities, currentDirection);
-            if (autoTradingEnabled && meetsThreshold) requestTradeProposal(true);
+            updateConfidenceState(probabilities, currentDirection);
         } finally {
             tf.dispose([inputTensor, outputTensor, prediction]);
             neuralTraining = false;
@@ -2882,6 +2931,7 @@
         if (!digits.length) return;
 
         const signal = calculateSignalStrength();
+        const prediction = updateActivePredictionUI();
         const activeWindow = shortBuffers[activeSignalWindow === 15 ? 'micro' : activeSignalWindow === 30 ? 'fast' : 'macro'];
         const evenEwma = calculateEwma(activeWindow, tick => tick.digit % 2 === 0) * 100;
         const overEwma = calculateEwma(activeWindow, tick => tick.digit >= 5) * 100;
@@ -2903,11 +2953,11 @@
 
         const signalOne = selectedMethod === 'rise-fall'
             ? (priceDelta >= 0 ? `RISE ${((rises / trendTotal) * 100).toFixed(0)}%` : `FALL ${((falls / trendTotal) * 100).toFixed(0)}%`)
-            : selectedMethod === 'accum' ? `ACTIVE ${rangePct}%` : selectedMethod === 'match-differ' ? (lastDigit === previousDigit ? 'MATCH' : 'DIFFER') : selectedMethod === 'over-under' ? overUnderValue : evenOddValue;
+            : selectedMethod === 'accum' ? `ACTIVE ${rangePct}%` : selectedMethod === 'match-differ' ? `${prediction.confidence}% ${prediction.type}` : selectedMethod === 'over-under' ? overUnderValue : evenOddValue;
         const signalTwo = selectedMethod === 'over-under' ? `BARRIER ${document.getElementById('trade-barrier').value}` : selectedMethod === 'rise-fall' ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : selectedMethod === 'accum' ? `${rangePct}% RANGE` : selectedMethod === 'match-differ' ? `LAST ${lastDigit}` : overUnderValue;
-        const signalThree = selectedMethod === 'accum' ? (Number(rangePct) >= 0.1 ? `ACTIVE ${rangePct}%` : `CALM ${rangePct}%`) : selectedMethod === 'rise-fall' ? `${signal.score.toFixed(0)}% TREND` : selectedMethod === 'match-differ'
+        const signalThree = selectedMethod === 'accum' ? (Number(rangePct) >= 0.1 ? `ACTIVE ${rangePct}%` : `CALM ${rangePct}%`) : selectedMethod === 'rise-fall' ? `${prediction.confidence}% TREND` : selectedMethod === 'match-differ'
             ? (lastDigit === previousDigit ? `MATCH ${matchPct}%` : `DIFFER ${100 - matchPct}%`)
-            : selectedMethod === 'over-under' ? `${signal.score.toFixed(0)}% EDGE` : `${signal.score.toFixed(0)}% ${signal.direction}`;
+            : selectedMethod === 'over-under' ? `${prediction.confidence}% ${prediction.type}` : `${prediction.confidence}% ${prediction.type}`;
 
         document.getElementById('evenodd-val').innerText = signalOne;
         document.getElementById('overunder-val').innerText = signalTwo;
