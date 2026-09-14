@@ -1738,11 +1738,10 @@
                 <div class="config-row">
                     <span style="color: var(--text-muted);">Tick Memory</span>
                     <label>
-                        <select id="tick-memory" class="memory-select" aria-label="Tick memory sample size" onchange="setTickMemory(this.value)">
-                            <option value="50">50 Ticks</option>
-                            <option value="100">100 Ticks</option>
-                            <option value="200" selected>200 Ticks (Default)</option>
-                            <option value="500">500 Ticks</option>
+                        <select id="tick-memory" class="memory-select" aria-label="Execution speed and sensitivity" onchange="setTickMemory(this.value)">
+                            <option value="15" selected>Aggressive (15 Ticks)</option>
+                            <option value="30">Balanced (30 Ticks)</option>
+                            <option value="100">Conservative (100 Ticks)</option>
                         </select>
                     </label>
                 </div>
@@ -1892,6 +1891,8 @@
     let ws = null;
     let tickHistory = [];
     const tickHistoryBuffer = [];
+    const shortBuffers = { micro: [], fast: [], macro: [] };
+    const BUFFER_LIMITS = { micro: 15, fast: 30, macro: 100 };
     const predictionHistoryBuffer = [];
     const MAX_BUFFER_SIZE = 10;
     const MIN_CONFIDENCE_THRESHOLD = 70;
@@ -1908,8 +1909,6 @@
     let lastModelRunAt = 0;
     let signalStrength = 0;
     let signalEma = null;
-    const MIN_SIGNAL_SAMPLE = 50;
-    const SIGNAL_EMA_ALPHA = 0.2;
     const MIN_SIGNAL_FOR_TRADE = 80;
     let isAuthorized = false;
     let pendingProposal = null;
@@ -1928,7 +1927,9 @@
     let tickVelocity = 0;
     let sessionStartedAt = Date.now();
     let sessionTimer = null;
-    let maxTickMemory = 200;
+    let maxTickMemory = 100;
+    let activeSignalWindow = 15;
+    let lastSignalDirection = '';
     let tradeHistory = [];
     let lossStreak = 0;
     let lossStreakLocked = false;
@@ -1957,7 +1958,7 @@
         ['Crash/Boom Indices', 'Crash 1000 Index', 'CRASH1000'],
         ['Crash/Boom Indices', 'Boom 1000 Index', 'BOOM1000']
     ].map(([submarket, display_name, symbol]) => ({ submarket, display_name, symbol }));
-    derivedMarkets = [FALLBACK_DERIVED_MARKETS[0]];
+    derivedMarkets = FALLBACK_DERIVED_MARKETS.slice();
 
     // Render Initial Grid Framework
     function initDigitGrid() {
@@ -1993,6 +1994,7 @@
         tickHistory = [];
         tickHistoryBuffer.length = 0;
         predictionHistoryBuffer.length = 0;
+        Object.values(shortBuffers).forEach(buffer => buffer.splice(0));
         sessionTickCount = 0;
         lastTickAt = 0;
         lastTickPrice = null;
@@ -2075,9 +2077,10 @@
                 return;
             }
             if (data.msg_type !== 'active_symbols') return;
-            const symbols = data.active_symbols.filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
+            const symbols = (data.active_symbols || []).filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
             if (!symbols.length) {
-                probeFallbackMarkets('Deriv directory returned no symbols.');
+                setMarketStatus('Directory unavailable. Using direct derived-market connection.');
+                if (marketDirectorySocket) marketDirectorySocket.close();
                 return;
             }
             derivedMarkets = symbols.sort((first, second) => `${first.submarket}${first.display_name}`.localeCompare(`${second.submarket}${second.display_name}`));
@@ -2192,15 +2195,16 @@
     }
 
     function setTickMemory(value) {
-        const allowedMemory = [50, 100, 200, 500];
+        const allowedMemory = [15, 30, 100];
         const requestedMemory = Number.parseInt(value, 10);
-        maxTickMemory = allowedMemory.includes(requestedMemory) ? requestedMemory : 200;
-        document.getElementById('tick-memory').value = maxTickMemory;
+        activeSignalWindow = allowedMemory.includes(requestedMemory) ? requestedMemory : 15;
+        maxTickMemory = 100;
+        document.getElementById('tick-memory').value = activeSignalWindow;
+        document.getElementById('past-sequence-label').innerText = `LIVE DIGIT HISTORY · ${activeSignalWindow}-TICK EWMA`;
         tickHistory = tickHistory.slice(-maxTickMemory);
-        signalEma = null;
-        updateSignalGauge(0, tickHistory.length);
+        updateSignalGauge(signalStrength, shortBuffers.macro.length);
         if (tickHistory.length) processData(tickHistory[tickHistory.length - 1]);
-        setHint(`Tick memory set to ${maxTickMemory} ticks. Live connection preserved.`);
+        setHint(`Execution sensitivity set to ${activeSignalWindow} ticks. Live connection preserved.`);
     }
 
     function setTradeLimit(value) {
@@ -2252,20 +2256,62 @@
         gauge.classList.remove('high', 'medium', 'low', 'pulse');
         gauge.classList.add(bounded >= 75 ? 'high' : bounded >= 50 ? 'medium' : 'low');
         if (bounded >= 85) gauge.classList.add('pulse');
-        const confidenceText = sampleSize < maxTickMemory ? 'WAIT' : `${bounded.toFixed(0)}%`;
+        const confidenceText = sampleSize ? `${bounded.toFixed(0)}%` : 'WAIT';
         display.innerText = confidenceText;
         gauge.setAttribute('aria-valuenow', bounded.toFixed(0));
-        gauge.setAttribute('aria-valuetext', sampleSize < maxTickMemory ? `Gathering ${maxTickMemory - sampleSize} more ticks` : `${bounded.toFixed(0)} percent`);
+        gauge.setAttribute('aria-valuetext', sampleSize ? `${bounded.toFixed(0)} percent` : 'Waiting for live ticks');
     }
 
-    function calculateSignalStrength(digits) {
-        const windowDigits = digits.slice(-maxTickMemory);
-        if (!windowDigits.length) return 0;
-        const counts = Array(10).fill(0);
-        windowDigits.forEach(digit => counts[digit]++);
-        const probability = Math.max(...counts) / windowDigits.length * 100;
-        signalEma = signalEma === null ? probability : signalEma + SIGNAL_EMA_ALPHA * (probability - signalEma);
-        return signalEma;
+    function addShortBuffer(buffer, value, limit) {
+        buffer.push(value);
+        if (buffer.length > limit) buffer.shift();
+    }
+
+    function ingestShortMemory(price) {
+        const numericPrice = Number(price);
+        if (!Number.isFinite(numericPrice)) return;
+        const digit = Number(String(price).slice(-1));
+        addShortBuffer(shortBuffers.micro, { price: numericPrice, digit }, BUFFER_LIMITS.micro);
+        addShortBuffer(shortBuffers.fast, { price: numericPrice, digit }, BUFFER_LIMITS.fast);
+        addShortBuffer(shortBuffers.macro, { price: numericPrice, digit }, BUFFER_LIMITS.macro);
+    }
+
+    function syncShortMemory(prices) {
+        Object.values(shortBuffers).forEach(buffer => buffer.splice(0));
+        prices.slice(-BUFFER_LIMITS.macro).forEach(ingestShortMemory);
+    }
+
+    function calculateEwma(values, predicate) {
+        let weightedTotal = 0;
+        let weightTotal = 0;
+        const decay = Math.log(2) / 5;
+        values.forEach((value, index) => {
+            const weight = Math.exp(-decay * (values.length - 1 - index));
+            weightedTotal += (predicate(value, index) ? 1 : 0) * weight;
+            weightTotal += weight;
+        });
+        return weightTotal ? weightedTotal / weightTotal : 0;
+    }
+
+    function calculateSignalStrength() {
+        const window = shortBuffers[activeSignalWindow === 15 ? 'micro' : activeSignalWindow === 30 ? 'fast' : 'macro'];
+        if (!window.length) return { score: 0, direction: '', hotDigit: -1 };
+        const recent = shortBuffers.macro.slice(-20);
+        const digitCounts = Array(10).fill(0);
+        recent.forEach(tick => digitCounts[tick.digit]++);
+        const hotDigit = digitCounts.findIndex(count => count / recent.length > 0.2);
+        const parityEwma = calculateEwma(window, tick => tick.digit % 2 === 0);
+        const overEwma = calculateEwma(window, tick => tick.digit >= 5);
+        const trendEwma = window.length > 1 ? calculateEwma(window.slice(1), (tick, index) => tick.price >= window[index].price) : 0.5;
+        const rawEdge = Math.max(Math.abs(parityEwma - 0.5) * 2, Math.abs(overEwma - 0.5) * 2, hotDigit >= 0 ? digitCounts[hotDigit] / recent.length : 0, Math.abs(trendEwma - 0.5) * 2);
+        const streakBoost = ['even', 'over', 'rise'].some(type => {
+            const lastFive = window.slice(-5);
+            const values = lastFive.map((tick, index) => type === 'even' ? tick.digit % 2 === 0 : type === 'over' ? tick.digit >= 5 : index === 0 || tick.price >= lastFive[index - 1].price);
+            return values.length >= 3 && (values.every(Boolean) || values.every(value => !value));
+        }) ? 1.35 : 1;
+        const score = Math.min(100, (0.5 + Math.pow(rawEdge, 0.72) * 0.5) * streakBoost * 100);
+        const direction = hotDigit >= 0 ? `DIGIT ${hotDigit}` : Math.abs(parityEwma - 0.5) >= Math.abs(overEwma - 0.5) ? (parityEwma >= 0.5 ? 'EVEN' : 'ODD') : (overEwma >= 0.5 ? 'OVER' : 'UNDER');
+        return { score, direction, hotDigit };
     }
 
     function updateContextMetrics({ digits = [], lastDigit = null, previousDigit = null, priceDelta = 0, rises = 0, falls = 0, trendTotal = 0, rangePct = '0.00', evenPct = '0', over5Pct = '0', matchPct = '0' } = {}) {
@@ -2590,10 +2636,10 @@
 
     function connectWebSocket() {
         if (!derivedMarkets.length) {
-            setPastDataState('loading', 'WAITING FOR MARKET', 'Verifying Deriv market symbols...');
-            setMarketStatus('Waiting for Deriv to verify a usable market...');
-            probeFallbackMarkets('Market directory is unavailable.');
-            return;
+            derivedMarkets = FALLBACK_DERIVED_MARKETS.slice();
+            currentSymbol = FALLBACK_DERIVED_MARKETS[0].symbol;
+            renderMarketOptions();
+            setMarketStatus('Using direct derived-market connection while the directory loads.');
         }
         if (ws) ws.close();
         window.clearInterval(marketPollingTimer);
@@ -2614,17 +2660,22 @@
             reconnectAttempts = 0;
             document.getElementById('status-badge').innerText = 'STATUS: LOADING HISTORY';
             connection.send(JSON.stringify({
-                active_symbols: 'brief',
-                req_id: 10
-            }));
-            connection.send(JSON.stringify({
                 ticks_history: currentSymbol,
                 adjust_start_time: 1,
-                count: maxTickMemory,
+                count: BUFFER_LIMITS.macro,
                 end: "latest",
                 style: "ticks",
                 req_id: 1
             }));
+            marketPollingTimer = window.setInterval(() => {
+                if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({
+                    ticks_history: currentSymbol,
+                    count: 1,
+                    end: 'latest',
+                    style: 'ticks',
+                    req_id: 3
+                }));
+            }, 750);
             setHint(`Connected to ${currentSymbol}. Waiting for market ticks...`);
         };
 
@@ -2650,38 +2701,42 @@
                 return;
             }
             if (data.msg_type === 'active_symbols') {
-                const symbols = data.active_symbols.filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
+                const symbols = (data.active_symbols || []).filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
                 if (symbols.length && !derivedMarkets.length) {
                     derivedMarkets = symbols;
                     renderMarketOptions();
-                } else if (!symbols.length) {
-                    setMarketStatus('Deriv returned no open derived markets. Check the connection and retry.');
                 }
                 return;
             }
             if (data.msg_type === 'history') {
-                tickHistory = data.history.prices.slice(-maxTickMemory);
+                const prices = data.history?.prices || [];
+                const times = data.history?.times || [];
+                if (data.req_id === 3) {
+                    const latestPrice = prices[prices.length - 1];
+                    const latestTime = Number(times[times.length - 1]);
+                    if (latestPrice === undefined || (latestTime && latestTime <= lastTickAt)) return;
+                    tickHistory.push(latestPrice);
+                    tickHistory = tickHistory.slice(-BUFFER_LIMITS.macro);
+                    ingestShortMemory(latestPrice);
+                    sessionTickCount++;
+                    lastTickAt = latestTime || lastTickAt + 1;
+                    processData(latestPrice, lastTickAt);
+                    return;
+                }
+                tickHistory = prices.slice(-BUFFER_LIMITS.macro);
+                syncShortMemory(tickHistory);
+                lastTickAt = Number(times[times.length - 1]) || 0;
                 if (tickHistory.length) {
                     document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
                     setMarketStatus(`Live data connected to ${currentSymbol}`);
                     processData(undefined, data.history.times?.[data.history.times.length - 1]);
-                    if (!marketPollingTimer) {
-                        marketPollingTimer = window.setInterval(() => {
-                            if (connection.readyState === WebSocket.OPEN) connection.send(JSON.stringify({
-                                ticks_history: currentSymbol,
-                                count: maxTickMemory,
-                                end: 'latest',
-                                style: 'ticks',
-                                req_id: 1
-                            }));
-                        }, 750);
-                    }
                 } else {
                     setPastDataState('error', 'NO HISTORY AVAILABLE', `Deriv returned no ticks for ${currentSymbol}.`);
                 }
             } else if (data.msg_type === 'tick') {
                 tickHistory.push(data.tick.quote);
-                tickHistory = tickHistory.slice(-maxTickMemory);
+                tickHistory = tickHistory.slice(-BUFFER_LIMITS.macro);
+                ingestShortMemory(data.tick.quote);
                 sessionTickCount++;
                 processData(data.tick.quote, data.tick.epoch);
             }
@@ -2750,19 +2805,29 @@
 
         renderPastData(digits);
 
-        signalStrength = calculateSignalStrength(digits);
+        const signal = calculateSignalStrength();
+        signalStrength = signal.score;
+        lastSignalDirection = signal.direction;
+        updateSignalGauge(signal.score, shortBuffers.macro.length);
 
         updateStrategySignals(digits);
 
-        if (tickHistory.length < 20) {
-            setHint(`Gathering tick intelligence... Need ${20 - tickHistory.length} more data points for reliable signals.`);
+        const tradeReady = signal.score >= Math.max(MIN_SIGNAL_FOR_TRADE, confidenceThreshold);
+        if (signal.hotDigit >= 0) {
+            setHint(`HOT DIGIT ${signal.hotDigit} detected. EWMA score ${signal.score.toFixed(0)}% with ${activeSignalWindow}-tick sensitivity.`);
+        } else if (shortBuffers.micro.length < 5) {
+            setHint(`Gathering short-memory tick intelligence... ${5 - shortBuffers.micro.length} more ticks for a live score.`);
         } else {
-            setHint(`Engine synchronized with ${currentSymbol}. High statistical deviation detected on coldest digit. Differ model edge active.`);
+            setHint(`EWMA ${signal.direction} score ${signal.score.toFixed(0)}% · ${activeSignalWindow}-tick sensitivity${tradeReady ? ' · execution threshold met' : ''}.`);
+        }
+        if (autoTradingEnabled && tradeReady && Number.isFinite(tickTimestamp) && lastTradeAt !== tickTimestamp) {
+            lastTradeAt = tickTimestamp;
+            requestTradeProposal(true);
         }
     }
 
     function scheduleNeuralModel(digits) {
-        if (digits.length < MIN_SIGNAL_SAMPLE || neuralTraining || neuralTrainingTimer) return;
+        if (digits.length < 10 || neuralTraining || neuralTrainingTimer) return;
         const wait = Math.max(0, 1000 - (Date.now() - lastModelRunAt));
         neuralTrainingTimer = window.setTimeout(() => {
             neuralTrainingTimer = null;
@@ -2771,7 +2836,7 @@
     }
 
     async function trainNeuralModel(digits) {
-        if (neuralTraining || typeof tf === 'undefined' || digits.length < MIN_SIGNAL_SAMPLE) return;
+        if (neuralTraining || typeof tf === 'undefined' || digits.length < 10) return;
         neuralTraining = true;
         lastModelRunAt = Date.now();
         const inputDigits = 10;
@@ -2816,17 +2881,17 @@
     function updateStrategySignals(digits = tickHistory.map(p => parseInt(p.toString().slice(-1)))) {
         if (!digits.length) return;
 
-        const evenCount = digits.filter(d => d % 2 === 0).length;
-        const evenPct = ((evenCount / digits.length) * 100).toFixed(0);
-        const over5Count = digits.filter(d => d >= 5).length;
-        const over5Pct = ((over5Count / digits.length) * 100).toFixed(0);
-        const evenOddValue = evenCount >= digits.length / 2 ? `${evenPct}% EVEN` : `${100 - evenPct}% ODD`;
-        const overUnderValue = over5Count >= digits.length / 2 ? `${over5Pct}% OVER` : `${100 - over5Pct}% UNDER`;
+        const signal = calculateSignalStrength();
+        const activeWindow = shortBuffers[activeSignalWindow === 15 ? 'micro' : activeSignalWindow === 30 ? 'fast' : 'macro'];
+        const evenEwma = calculateEwma(activeWindow, tick => tick.digit % 2 === 0) * 100;
+        const overEwma = calculateEwma(activeWindow, tick => tick.digit >= 5) * 100;
+        const evenOddValue = `${Math.max(evenEwma, 100 - evenEwma).toFixed(0)}% ${evenEwma >= 50 ? 'EVEN' : 'ODD'}`;
+        const overUnderValue = `${Math.max(overEwma, 100 - overEwma).toFixed(0)}% ${overEwma >= 50 ? 'OVER' : 'UNDER'}`;
         const recentDigits = digits.slice(-20);
         const lastDigit = recentDigits[recentDigits.length - 1];
         const previousDigit = recentDigits[recentDigits.length - 2];
         const matches = recentDigits.filter(digit => digit === lastDigit).length;
-        const matchPct = ((matches / recentDigits.length) * 100).toFixed(0);
+        const matchPct = (recentDigits.length ? (matches / recentDigits.length) * 100 : 0).toFixed(0);
         const priceValues = tickHistory.slice(-20).map(Number).filter(Number.isFinite);
         const rises = priceValues.slice(1).filter((price, index) => price > priceValues[index]).length;
         const falls = priceValues.slice(1).filter((price, index) => price < priceValues[index]).length;
@@ -2840,14 +2905,14 @@
             ? (priceDelta >= 0 ? `RISE ${((rises / trendTotal) * 100).toFixed(0)}%` : `FALL ${((falls / trendTotal) * 100).toFixed(0)}%`)
             : selectedMethod === 'accum' ? `ACTIVE ${rangePct}%` : selectedMethod === 'match-differ' ? (lastDigit === previousDigit ? 'MATCH' : 'DIFFER') : selectedMethod === 'over-under' ? overUnderValue : evenOddValue;
         const signalTwo = selectedMethod === 'over-under' ? `BARRIER ${document.getElementById('trade-barrier').value}` : selectedMethod === 'rise-fall' ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : selectedMethod === 'accum' ? `${rangePct}% RANGE` : selectedMethod === 'match-differ' ? `LAST ${lastDigit}` : overUnderValue;
-        const signalThree = selectedMethod === 'accum' ? (Number(rangePct) >= 0.1 ? `ACTIVE ${rangePct}%` : `CALM ${rangePct}%`) : selectedMethod === 'rise-fall' ? `${((Math.max(rises, falls) / trendTotal) * 100).toFixed(0)}% TREND` : selectedMethod === 'match-differ'
+        const signalThree = selectedMethod === 'accum' ? (Number(rangePct) >= 0.1 ? `ACTIVE ${rangePct}%` : `CALM ${rangePct}%`) : selectedMethod === 'rise-fall' ? `${signal.score.toFixed(0)}% TREND` : selectedMethod === 'match-differ'
             ? (lastDigit === previousDigit ? `MATCH ${matchPct}%` : `DIFFER ${100 - matchPct}%`)
-            : selectedMethod === 'over-under' ? `${Math.abs(over5Pct - 50)}% EDGE` : 'LOW';
+            : selectedMethod === 'over-under' ? `${signal.score.toFixed(0)}% EDGE` : `${signal.score.toFixed(0)}% ${signal.direction}`;
 
         document.getElementById('evenodd-val').innerText = signalOne;
         document.getElementById('overunder-val').innerText = signalTwo;
         document.getElementById('matches-val').innerText = signalThree;
-        updateContextMetrics({ digits, lastDigit, previousDigit, priceDelta, rises, falls, trendTotal, rangePct, evenPct, over5Pct, matchPct });
+        updateContextMetrics({ digits, lastDigit, previousDigit, priceDelta, rises, falls, trendTotal, rangePct, evenPct: evenEwma.toFixed(0), over5Pct: overEwma.toFixed(0), matchPct });
     }
 
     function setPastDataState(state, title, message) {
@@ -2870,7 +2935,7 @@
         const sequenceLabel = document.getElementById('past-sequence-label');
         const sequenceBox = document.getElementById('past-sequence');
         if (!title || !sample || !grid) return;
-        sample.innerText = `${digits.length} TICKS`;
+        sample.innerText = `${digits.length} TICKS · ${activeSignalWindow}-TICK EWMA`;
         sample.className = 'data-status ready';
         if (!digits.length) {
             setPastDataState('loading', 'WAITING FOR LIVE DATA', 'Start analysis to load live ticks.');
@@ -2905,7 +2970,7 @@
         title.innerText = `${selectedMethod.toUpperCase().replace('-', ' / ')} PAST DATA`;
         grid.innerHTML = [0, 2, 4].map(index => `<div class="past-data-item"><span>${data[index]}</span><strong>${data[index + 1]}</strong></div>`).join('');
         const sequenceEntries = getMethodSequence(digits, prices, document.getElementById('trade-barrier').value);
-        sequenceLabel.innerText = `${selectedMethod.toUpperCase().replace('-', ' / ')} HISTORY · LAST ${sequenceEntries.length}`;
+        sequenceLabel.innerText = `${selectedMethod.toUpperCase().replace('-', ' / ')} HISTORY · LAST ${sequenceEntries.length} · ${activeSignalWindow}-TICK EWMA`;
         sequenceBox.innerHTML = sequenceEntries.map((entry, index) => `<span class="sequence-token ${entry.type} ${index === sequenceEntries.length - 1 ? 'latest' : ''}" title="${entry.title}">${entry.value}</span>`).join('');
     }
 
@@ -3173,6 +3238,7 @@
     // Initialize layout
     initDigitGrid();
     showView('home');
+    renderMarketOptions();
     loadDerivedMarkets();
     updateMethodPresentation();
     setConfidenceThreshold(confidenceThreshold);
