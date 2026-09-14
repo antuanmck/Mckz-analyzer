@@ -1741,17 +1741,20 @@
 
         .engine-config-panel .risk-settings {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 8px;
             margin-top: 0;
             padding: 10px;
             border-color: #363c4e;
             border-radius: 8px;
             background: #1e222d;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .engine-config-panel .risk-settings label,
         .engine-config-panel .trade-settings label {
+            min-width: 0;
             color: var(--text-muted);
             font-size: 0.53rem;
         }
@@ -1765,6 +1768,10 @@
             background: #2a2e39;
             color: #fff;
             font-size: 0.68rem;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         .engine-config-panel .trade-settings {
