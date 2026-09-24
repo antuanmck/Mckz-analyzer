@@ -312,26 +312,10 @@
             text-shadow: 0 0 14px rgba(240, 246, 252, 0.12);
         }
 
-        .market-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .market-controls select {
-            flex: 1;
-        }
-
-        .market-controls .btn-primary {
-            white-space: nowrap;
-        }
-
         .market-status {
             display: block;
             min-height: 1em;
-            margin-top: -8px;
+            margin: 6px 2px 12px;
             color: var(--text-muted);
             font-size: 0.62rem;
         }
@@ -379,10 +363,33 @@
             gap: 12px;
         }
 
+        /* Unified control row: market selector + strategy tabs + start-analysis action */
+        .dashboard-controls-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 9px;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-controls-row select {
+            flex: 0 0 auto;
+        }
+
+        .dashboard-controls-row .btn-primary {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
         .method-tabs {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 4px;
+            flex: 1 1 320px;
             background: #080b11;
             border: 1px solid var(--panel-border);
             padding: 3px;
@@ -880,7 +887,7 @@
 
         .trade-actions {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             margin-top: 12px;
         }
@@ -888,20 +895,6 @@
         .trade-actions button {
             margin-top: 0;
             padding: 10px 6px;
-        }
-
-        .trade-actions .btn-secondary:last-child {
-            grid-column: 1 / -1;
-        }
-
-        .execution-note {
-            background: rgba(255, 214, 0, 0.06);
-            border-left: 2px solid var(--accent-gold);
-            color: var(--text-muted);
-            font-size: 0.68rem;
-            line-height: 1.45;
-            margin-top: 12px;
-            padding: 8px 10px;
         }
 
         .ops-grid {
@@ -1015,18 +1008,6 @@
             box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
         }
 
-        .engine-config-heading {
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .engine-config-heading::after {
-            content: "RISK CONTROL";
-            color: var(--accent-gold);
-            font-size: 0.56rem;
-            letter-spacing: 1px;
-        }
-
         .config-row {
             min-height: 38px;
             align-items: center;
@@ -1034,14 +1015,6 @@
 
         .config-row > span:first-child {
             font-weight: 700;
-        }
-
-        .config-section-label {
-            margin: 16px 0 4px;
-            color: var(--accent-gold);
-            font-size: 0.58rem;
-            font-weight: 800;
-            letter-spacing: 1px;
         }
 
         .risk-settings {
@@ -1574,16 +1547,11 @@
             max-height: 200px;
         }
 
-        .execution-note {
-            border-left-color: var(--accent-gold);
-            background: rgba(245, 192, 39, 0.08);
-        }
-
         .right-column .panel {
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
         }
 
-        /* Engine controls reference styling */
+        /* ===== Engine Config: bento glassmorphism refactor ===== */
         .engine-config-panel {
             background: #131722;
             border-color: #363c4e;
@@ -1592,24 +1560,109 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .engine-config-heading {
+        .gc-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             min-height: 28px;
             margin-bottom: 14px;
             padding-bottom: 10px;
             border-bottom: 1px solid #363c4e;
-            color: #fff;
-            font-size: 0.72rem;
         }
 
-        .engine-config-heading::after {
-            content: "LIVE";
+        .gc-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .gc-panel-title .gc-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: var(--accent-blue);
+        }
+
+        .gc-panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gc-live-pill {
             padding: 3px 8px;
             border: 1px solid var(--accent-green);
             border-radius: 20px;
             background: rgba(0, 230, 118, 0.1);
             color: var(--accent-green);
             font-size: 0.55rem;
+            font-weight: 800;
             letter-spacing: 0.5px;
+        }
+
+        .gc-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border: 1px solid #363c4e;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .gc-icon-btn svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .gc-icon-btn:hover {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            background: rgba(41, 182, 246, 0.08);
+        }
+
+        /* Nested bento cards */
+        .gc-card {
+            background: rgba(18, 24, 38, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .gc-card-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            color: #8b949e;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .gc-icon-sm {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+            color: var(--accent-gold);
+        }
+
+        .gc-trade-count {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 5px;
         }
 
         .engine-config-panel .config-row,
@@ -1618,9 +1671,7 @@
         .engine-config-panel .trade-settings,
         .engine-config-panel .risk-check,
         .engine-config-panel .trade-actions,
-        .engine-config-panel .execution-note,
-        .engine-config-panel > #confirm-trade,
-        .engine-config-panel > .btn-secondary {
+        .engine-config-panel > #confirm-trade {
             margin-left: 0;
             margin-right: 0;
         }
@@ -1630,6 +1681,10 @@
             border-bottom: 1px solid rgba(54, 60, 78, 0.7);
             color: var(--text-muted);
             font-size: 0.68rem;
+        }
+
+        .engine-config-panel .config-row:last-of-type {
+            border-bottom: 0;
         }
 
         .engine-config-panel .config-row > span:first-child {
@@ -1689,12 +1744,19 @@
         }
 
         .engine-config-panel .stepper-button {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #363c4e;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .engine-config-panel .trade-limit-control .stepper-button {
             width: 28px;
             height: 28px;
             border: 0;
             border-radius: 0;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-main);
         }
 
         .engine-config-panel .prediction-control {
@@ -1720,6 +1782,7 @@
             width: 16px;
             height: 16px;
             background: var(--accent-green);
+            box-shadow: 0 0 10px 2px rgba(0, 230, 118, 0.6);
         }
 
         .engine-config-panel .prediction-control footer {
@@ -1733,21 +1796,14 @@
             font-size: 0.58rem;
         }
 
-        .engine-config-panel .config-section-label {
-            margin: 14px 0 6px;
-            color: var(--accent-amber, #ffb300);
-            font-size: 0.56rem;
-        }
-
         .engine-config-panel .risk-settings {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 8px;
             margin-top: 0;
-            padding: 10px;
-            border-color: #363c4e;
-            border-radius: 8px;
-            background: #1e222d;
+            padding: 0;
+            border: 0;
+            background: transparent;
             min-width: 0;
             overflow: hidden;
         }
@@ -1766,6 +1822,7 @@
             margin-top: 4px;
             padding: 6px 8px;
             background: #2a2e39;
+            border-color: #363c4e;
             color: #fff;
             font-size: 0.68rem;
             width: 100%;
@@ -1775,7 +1832,7 @@
         }
 
         .engine-config-panel .trade-settings {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             margin-top: 0;
         }
@@ -1789,9 +1846,142 @@
             font-size: 0.55rem;
         }
 
+        /* Unit-labeled inputs with inline +/- steppers */
+        .unit-input-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .unit-input-group input {
+            flex: 1 1 34px;
+            min-width: 34px;
+            margin-top: 0 !important;
+        }
+
+        /* Hide native number spinner arrows so only the custom +/- steppers show */
+        .unit-input-group input[type="number"] {
+            appearance: textfield;
+            -moz-appearance: textfield;
+        }
+
+        .unit-input-group input[type="number"]::-webkit-outer-spin-button,
+        .unit-input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .unit-prefix,
+        .unit-suffix {
+            display: flex;
+            align-items: center;
+            padding: 0 7px;
+            border: 1px solid #363c4e;
+            border-radius: 6px;
+            background: #20242f;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .unit-steppers {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .unit-steppers .stepper-button {
+            width: 20px;
+            height: 14px;
+            border-radius: 3px;
+            font-size: 0.55rem;
+            line-height: 1;
+        }
+
+        .quick-pills {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .quick-pills button {
+            flex: 1;
+            border: 1px solid #363c4e;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-size: 0.56rem;
+            font-weight: 800;
+            padding: 4px 0;
+            cursor: pointer;
+            transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .quick-pills button:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(0, 230, 118, 0.08);
+        }
+
+        /* Collapsible safety disclaimer, replaces the old static yellow note */
+        .gc-safety-note {
+            margin-top: 12px;
+            padding: 8px 10px;
+            border: 1px dashed #363c4e;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .gc-safety-note summary {
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            list-style: none;
+        }
+
+        .gc-safety-note summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .gc-safety-note summary::before {
+            content: "▸ ";
+            color: var(--accent-gold);
+        }
+
+        .gc-safety-note[open] summary::before {
+            content: "▾ ";
+        }
+
+        .gc-safety-note p {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.62rem;
+            line-height: 1.45;
+        }
+
+        /* Sticky execution actions so they stay reachable without scrolling */
+        .gc-sticky-actions {
+            position: sticky;
+            bottom: 12px;
+            margin-top: 14px;
+            padding: 10px;
+            border: 1px solid #363c4e;
+            border-radius: 10px;
+            background: rgba(13, 17, 23, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            z-index: 5;
+        }
+
         .engine-config-panel .trade-actions {
             gap: 8px;
-            margin-top: 14px;
+            margin-top: 0;
         }
 
         .engine-config-panel .trade-actions .btn-secondary {
@@ -1801,27 +1991,27 @@
             background: #2a2e39;
             border-color: #363c4e;
             color: #fff;
-            font-size: 0.62rem;
+            font-size: 0.6rem;
         }
 
-        .engine-config-panel .trade-actions .btn-secondary:nth-child(2) {
-            background: var(--accent-green);
-            border-color: var(--accent-green);
-            color: #000;
+        .gc-action-start {
+            background: var(--accent-green) !important;
+            border-color: var(--accent-green) !important;
+            color: #000 !important;
+            box-shadow: 0 0 16px rgba(0, 230, 118, 0.35);
         }
 
-        .engine-config-panel .trade-actions .btn-secondary:last-child,
-        .engine-config-panel .danger-button {
-            background: var(--accent-red);
-            border-color: var(--accent-red);
-            color: #fff;
+        .gc-action-stop {
+            background: var(--accent-red) !important;
+            border-color: var(--accent-red) !important;
+            color: #fff !important;
+            box-shadow: 0 0 16px rgba(255, 82, 82, 0.3);
         }
 
-        .engine-config-panel > .btn-secondary:last-child {
-            border: 1px dashed #363c4e;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 0.58rem;
+        .gc-action-manual {
+            background: transparent !important;
+            border: 1px solid #363c4e !important;
+            color: var(--text-main) !important;
         }
 
         @media (max-width: 900px) {
@@ -1909,13 +2099,15 @@
                 font-size: clamp(2.2rem, 12vw, 3.5rem);
             }
 
-            .market-controls,
             .trade-settings {
                 display: grid;
                 grid-template-columns: 1fr;
             }
 
-            .market-controls .btn-primary {
+            .dashboard-controls-row select,
+            .dashboard-controls-row .method-tabs,
+            .dashboard-controls-row .btn-primary {
+                flex: 1 1 100%;
                 width: 100%;
             }
 
@@ -2188,13 +2380,21 @@
     </main>
 
     <main id="analyzer-view" class="view-hidden" aria-label="Market analyzer">
-    <nav class="method-tabs" aria-label="Trading method">
-        <button class="method-tab" data-method="over-under" onclick="selectMethod('over-under', this)">Over / Under</button>
-        <button class="method-tab active" data-method="even-odd" onclick="selectMethod('even-odd', this)">Even / Odd</button>
-        <button class="method-tab" data-method="match-differ" onclick="selectMethod('match-differ', this)">Match / Differ</button>
-        <button class="method-tab" data-method="rise-fall" onclick="selectMethod('rise-fall', this)">Rise / Fall</button>
-        <button class="method-tab" data-method="accum" onclick="selectMethod('accum', this)">Accum</button>
-    </nav>
+    <!-- Unified control row: market selector, strategy tabs, start-analysis action -->
+    <div class="dashboard-controls-row">
+        <select id="market-select" onchange="changeMarket()" disabled aria-busy="true">
+            <option value="R_10">Verifying derived markets...</option>
+        </select>
+        <nav class="method-tabs" aria-label="Trading method">
+            <button class="method-tab" data-method="over-under" onclick="selectMethod('over-under', this)">Over / Under</button>
+            <button class="method-tab active" data-method="even-odd" onclick="selectMethod('even-odd', this)">Even / Odd</button>
+            <button class="method-tab" data-method="match-differ" onclick="selectMethod('match-differ', this)">Match / Differ</button>
+            <button class="method-tab" data-method="rise-fall" onclick="selectMethod('rise-fall', this)">Rise / Fall</button>
+            <button class="method-tab" data-method="accum" onclick="selectMethod('accum', this)">Accum</button>
+        </nav>
+        <button id="analysis-button" class="btn-primary" onclick="toggleEngine()">START ANALYSIS</button>
+    </div>
+    <span id="market-status" class="market-status loading" role="status" aria-live="polite">Loading Deriv market directory...</span>
 
     <!-- Main Grid Workspace -->
     <div class="dashboard-layout">
@@ -2246,13 +2446,6 @@
 
             <!-- Strategy Signals Grid -->
             <div class="panel">
-                <div class="market-controls">
-                    <select id="market-select" onchange="changeMarket()" disabled aria-busy="true">
-                        <option value="R_10">Verifying derived markets...</option>
-                    </select>
-                    <button id="analysis-button" class="btn-primary" onclick="toggleEngine()">START ANALYSIS</button>
-                </div>
-                <span id="market-status" class="market-status loading" role="status" aria-live="polite">Loading Deriv market directory...</span>
                 <div class="panel-label">⚡ Market Signals</div>
                 <div id="selected-method" class="selected-method">ACTIVE METHOD: EVEN / ODD</div>
                 <div class="strategy-grid">
@@ -2302,100 +2495,187 @@
         <div class="right-column">
             <!-- Engine Config -->
             <div class="panel engine-config-panel">
-                <div class="panel-label engine-config-heading">⚙ Engine Config</div>
-                <div class="config-row">
-                    <span style="color: var(--text-muted);">Tick Memory</span>
-                    <label>
-                        <select id="tick-memory" class="memory-select" aria-label="Execution speed and sensitivity" onchange="setTickMemory(this.value)">
-                            <option value="15" selected>Aggressive (15 Ticks)</option>
-                            <option value="30">Balanced (30 Ticks)</option>
-                            <option value="100">Conservative (100 Ticks)</option>
-                        </select>
-                    </label>
+                <div class="gc-panel-header">
+                    <div class="gc-panel-title">
+                        <svg class="gc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                        <span>ENGINE CONFIG</span>
+                    </div>
+                    <div class="gc-panel-actions">
+                        <span class="gc-live-pill">LIVE</span>
+                        <button class="gc-icon-btn" type="button" onclick="exportData()" title="Export live tick and trade data" aria-label="Export live data">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="config-row">
-                    <span style="color: var(--text-muted);">Auto-Trading</span>
-                    <label class="toggle-control">
-                        <input id="autotrade-toggle" type="checkbox" onchange="toggleAutoTrading(this.checked)" aria-describedby="autotrade-status">
-                        <span class="toggle-slider"></span>
-                    </label>
+
+                <!-- Engine Status card -->
+                <div class="gc-card">
+                    <div class="gc-card-label">
+                        <svg class="gc-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+                        ENGINE STATUS
+                    </div>
+                    <div class="config-row">
+                        <span style="color: var(--text-muted);">Tick Memory</span>
+                        <label>
+                            <select id="tick-memory" class="memory-select" aria-label="Execution speed and sensitivity" onchange="setTickMemory(this.value)">
+                                <option value="15" selected>Aggressive (15 Ticks)</option>
+                                <option value="30">Balanced (30 Ticks)</option>
+                                <option value="100">Conservative (100 Ticks)</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="config-row">
+                        <span style="color: var(--text-muted);">Auto-Trading</span>
+                        <label class="toggle-control">
+                            <input id="autotrade-toggle" type="checkbox" onchange="toggleAutoTrading(this.checked)" aria-describedby="autotrade-status">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="config-row">
+                        <span style="color: var(--text-muted);">Trade Limit</span>
+                        <label class="trade-limit-control">
+                            <button class="stepper-button" type="button" onclick="adjustTradeLimit(-1)" aria-label="Decrease trade limit">-</button>
+                            <input id="trade-limit" type="number" min="1" max="20" value="1" aria-label="Maximum automatic trades" onchange="setTradeLimit(this.value)">
+                            <button class="stepper-button" type="button" onclick="adjustTradeLimit(1)" aria-label="Increase trade limit">+</button>
+                        </label>
+                    </div>
+                    <div class="prediction-control">
+                        <header><span>PREDICTION FILTER</span><span id="confidence-value" aria-live="polite">70%</span></header>
+                        <input id="confidence-threshold" type="range" min="70" max="100" value="70" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
+                        <footer><span>MIN 70%</span><span>MAX 100%</span></footer>
+                    </div>
+                    <div id="autotrade-status" class="auto-trade-status" aria-live="polite">AUTO-TRADING OFF</div>
+                    <div id="trade-count" class="gc-trade-count">TRADES: 0 / 1</div>
+                    <div id="loss-lock" class="loss-lock" role="status" aria-live="assertive">
+                        <strong>MAX LOSS STREAK REACHED</strong><br>
+                        Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
+                        <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
+                    </div>
                 </div>
-                <div class="config-row">
-                    <span style="color: var(--text-muted);">Trade Limit</span>
-                    <label class="trade-limit-control">
-                        <button class="stepper-button" type="button" onclick="adjustTradeLimit(-1)" aria-label="Decrease trade limit">-</button>
-                        <input id="trade-limit" type="number" min="1" max="20" value="1" aria-label="Maximum automatic trades" onchange="setTradeLimit(this.value)">
-                        <button class="stepper-button" type="button" onclick="adjustTradeLimit(1)" aria-label="Increase trade limit">+</button>
-                    </label>
+
+                <!-- Risk Management card -->
+                <div class="gc-card">
+                    <div class="gc-card-label">
+                        <svg class="gc-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+                        RISK MANAGEMENT
+                    </div>
+                    <div class="risk-settings">
+                        <label class="unit-field">STOP LOSS
+                            <div class="unit-input-group">
+                                <span class="unit-prefix">$</span>
+                                <input id="stop-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('stop-loss', 1, 2)" aria-label="Increase stop loss">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('stop-loss', -1, 2)" aria-label="Decrease stop loss">-</button>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="unit-field">TAKE PROFIT
+                            <div class="unit-input-group">
+                                <span class="unit-prefix">$</span>
+                                <input id="take-profit" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('take-profit', 1, 2)" aria-label="Increase take profit">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('take-profit', -1, 2)" aria-label="Decrease take profit">-</button>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="unit-field">MAX DAILY LOSS
+                            <div class="unit-input-group">
+                                <span class="unit-prefix">$</span>
+                                <input id="daily-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('daily-loss', 1, 2)" aria-label="Increase max daily loss">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('daily-loss', -1, 2)" aria-label="Decrease max daily loss">-</button>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="unit-field">MAX LOSS STREAK
+                            <div class="unit-input-group">
+                                <input id="loss-streak" type="number" min="1" max="20" step="1" value="3" inputmode="numeric">
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('loss-streak', 1, 0)" aria-label="Increase max loss streak">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('loss-streak', -1, 0)" aria-label="Decrease max loss streak">-</button>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-                <div class="prediction-control">
-                    <header><span>PREDICTION FILTER</span><span id="confidence-value" aria-live="polite">70%</span></header>
-                    <input id="confidence-threshold" type="range" min="70" max="100" value="70" step="1" aria-label="Minimum prediction confidence" oninput="setConfidenceThreshold(this.value)">
-                    <footer><span>AGGRESSIVE (LOW)</span><span>SELECTIVE (HIGH)</span></footer>
+
+                <!-- Contract Parameters card -->
+                <div class="gc-card">
+                    <div class="gc-card-label">
+                        <svg class="gc-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="19" cy="12" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>
+                        CONTRACT PARAMETERS
+                    </div>
+                    <div class="trade-settings">
+                        <label id="contract-field">CONTRACT
+                            <select id="contract-type" onchange="updateTradeParameterFields()">
+                                <option value="DIGITEVEN">Even</option>
+                                <option value="DIGITODD">Odd</option>
+                                <option value="DIGITOVER">Over</option>
+                                <option value="DIGITUNDER">Under</option>
+                                <option value="DIGITMATCH">Match</option>
+                                <option value="DIGITDIFF">Differ</option>
+                                <option value="CALL">Rise</option>
+                                <option value="PUT">Fall</option>
+                                <option value="ACCU">Accum</option>
+                            </select>
+                        </label>
+                        <label id="barrier-field">BARRIER
+                            <input id="trade-barrier" type="number" min="0" max="9" step="1" value="5" inputmode="numeric">
+                        </label>
+                        <label id="stake-field">STAKE
+                            <div class="unit-input-group">
+                                <span class="unit-prefix">$</span>
+                                <input id="trade-stake" type="number" min="0.35" step="0.01" value="1" inputmode="decimal">
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('trade-stake', 1, 2)" aria-label="Increase stake">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('trade-stake', -1, 2)" aria-label="Decrease stake">-</button>
+                                </div>
+                            </div>
+                            <div class="quick-pills">
+                                <button type="button" onclick="applyStakePercent(1)">1%</button>
+                                <button type="button" onclick="applyStakePercent(2)">2%</button>
+                                <button type="button" onclick="applyStakePercent(5)">5%</button>
+                            </div>
+                        </label>
+                        <label id="duration-field">DURATION
+                            <div class="unit-input-group">
+                                <input id="trade-duration" type="number" min="1" max="10" step="1" value="1" inputmode="numeric">
+                                <span class="unit-suffix">Ticks</span>
+                                <div class="unit-steppers">
+                                    <button class="stepper-button" type="button" onclick="stepInput('trade-duration', 1, 0)" aria-label="Increase duration">+</button>
+                                    <button class="stepper-button" type="button" onclick="stepInput('trade-duration', -1, 0)" aria-label="Decrease duration">-</button>
+                                </div>
+                            </div>
+                        </label>
+                        <label id="prediction-field" class="prediction-field hidden">LAST DIGIT PREDICTION
+                            <input id="trade-prediction" type="number" min="0" max="9" step="1" value="0" inputmode="numeric" aria-describedby="prediction-help" onchange="renderPastData()">
+                            <span id="prediction-help" class="field-help">Required for Matches and Differs contracts.</span>
+                        </label>
+                    </div>
                 </div>
-                <div id="autotrade-status" class="auto-trade-status" aria-live="polite">AUTO-TRADING OFF</div>
-                <div id="trade-count" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 5px;">TRADES: 0 / 1</div>
-                <div id="loss-lock" class="loss-lock" role="status" aria-live="assertive">
-                    <strong>MAX LOSS STREAK REACHED</strong><br>
-                    Automatic and manual trading are paused. Review the account, then reset the lock to re-enable trading.
-                    <button type="button" onclick="resetLossStreakLock()">RESET LOSS LOCK</button>
-                </div>
-                <div class="config-section-label">RISK MANAGEMENT</div>
-                <div class="risk-settings">
-                    <label>STOP LOSS (USD)
-                        <input id="stop-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
-                    </label>
-                    <label>TAKE PROFIT (USD)
-                        <input id="take-profit" type="number" min="0" step="0.01" value="0" inputmode="decimal">
-                    </label>
-                    <label>MAX DAILY LOSS (USD)
-                        <input id="daily-loss" type="number" min="0" step="0.01" value="0" inputmode="decimal">
-                    </label>
-                    <label>MAX LOSS STREAK
-                        <input id="loss-streak" type="number" min="1" max="20" step="1" value="3" inputmode="numeric">
-                    </label>
-                </div>
-                <div class="config-section-label">CONTRACT PARAMETERS</div>
-                <div class="trade-settings">
-                    <label id="contract-field">CONTRACT
-                        <select id="contract-type" onchange="updateTradeParameterFields()">
-                            <option value="DIGITEVEN">Even</option>
-                            <option value="DIGITODD">Odd</option>
-                            <option value="DIGITOVER">Over</option>
-                            <option value="DIGITUNDER">Under</option>
-                            <option value="DIGITMATCH">Match</option>
-                            <option value="DIGITDIFF">Differ</option>
-                            <option value="CALL">Rise</option>
-                            <option value="PUT">Fall</option>
-                            <option value="ACCU">Accum</option>
-                        </select>
-                    </label>
-                    <label id="barrier-field">BARRIER
-                        <input id="trade-barrier" type="number" min="0" max="9" step="1" value="5" inputmode="numeric">
-                    </label>
-                    <label id="stake-field">STAKE
-                        <input id="trade-stake" type="number" min="0.35" step="0.01" value="1" inputmode="decimal">
-                    </label>
-                    <label id="duration-field">DURATION
-                        <input id="trade-duration" type="number" min="1" max="10" step="1" value="1" inputmode="numeric">
-                    </label>
-                    <label id="prediction-field" class="prediction-field hidden">LAST DIGIT PREDICTION
-                        <input id="trade-prediction" type="number" min="0" max="9" step="1" value="0" inputmode="numeric" aria-describedby="prediction-help" onchange="renderPastData()">
-                        <span id="prediction-help" class="field-help">Required for Matches and Differs contracts.</span>
-                    </label>
-                </div>
+
                 <label class="risk-check">
                     <input id="risk-confirm" type="checkbox">
                     <span>I understand these controls can place real-money trades in the authorized Deriv account.</span>
                 </label>
-                <div class="trade-actions">
-                    <button class="btn-secondary" onclick="manualTrade()">MANUAL TRADE</button>
-                    <button class="btn-secondary" onclick="startAutoTrading()">START AUTO</button>
-                    <button class="btn-secondary" onclick="stopAutoTrading()">STOP AUTO</button>
+
+                <details class="gc-safety-note">
+                    <summary>Trading Rules &amp; Safety Info</summary>
+                    <p>Armed means the analyzer may request a proposal. A buy requires confirmed API authorization, your contract, stake, duration, risk acknowledgement, and the selected prediction confidence. Manual trades always require a separate confirmation.</p>
+                </details>
+
+                <!-- Sticky execution actions -->
+                <div class="gc-sticky-actions">
+                    <div class="trade-actions">
+                        <button class="btn-secondary gc-action-manual" onclick="manualTrade()">MANUAL TRADE</button>
+                        <button class="btn-secondary gc-action-start" onclick="startAutoTrading()">START AUTO</button>
+                        <button class="btn-secondary gc-action-stop" onclick="stopAutoTrading()">STOP AUTO</button>
+                    </div>
+                    <button id="confirm-trade" class="confirm-trade" onclick="confirmTrade()">CONFIRM BUY ORDER</button>
                 </div>
-                <button id="confirm-trade" class="confirm-trade" onclick="confirmTrade()">CONFIRM BUY ORDER</button>
-                <div class="execution-note">Armed means the analyzer may request a proposal. A buy requires confirmed API authorization, your contract, stake, duration, risk acknowledgement, and the selected prediction confidence. Manual trades always require a separate confirmation.</div>
-                <button class="btn-secondary" onclick="exportData()">📈 EXPORT LIVE DATA</button>
             </div>
 
             <!-- Hint Log Panel -->
@@ -2518,7 +2798,7 @@
     })();
 
     const API_BASE = 'https://api.derivws.com';
-    const DEFAULT_PUBLIC_APP_ID = '1089';
+    const DEFAULT_PUBLIC_APP_ID = '34e7e5y1OVUxVGK8m1PPv';
     const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
     let ws = null;
     let tickHistory = [];
@@ -2885,6 +3165,31 @@
         slider.value = confidenceThreshold;
         slider.style.setProperty('--slider-progress', `${((confidenceThreshold - Number(slider.min)) / (Number(slider.max) - Number(slider.min))) * 100}%`);
         document.getElementById('confidence-value').innerText = `${confidenceThreshold}%`;
+    }
+
+    // Generic +/- stepper for the unit-labeled number inputs (stake, stop loss, take profit, duration, etc.).
+    function stepInput(id, direction, decimals) {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const step = Number(input.step) || Math.pow(10, -(decimals ?? 0));
+        const min = input.min !== '' ? Number(input.min) : -Infinity;
+        const max = input.max !== '' ? Number(input.max) : Infinity;
+        const next = Math.min(max, Math.max(min, (Number(input.value) || 0) + direction * step));
+        input.value = decimals !== undefined ? next.toFixed(decimals) : String(next);
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Sets the stake to a percentage of the authorized account balance (quick-pill shortcut).
+    function applyStakePercent(percent) {
+        const balance = parseFloat(document.getElementById('account-balance')?.innerText);
+        if (!isFinite(balance)) {
+            setHint('Authorize an account to use balance-based quick stake.');
+            return;
+        }
+        const stakeInput = document.getElementById('trade-stake');
+        const value = Math.max(Number(stakeInput.min) || 0.35, +(balance * percent / 100).toFixed(2));
+        stakeInput.value = value;
+        stakeInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     function updateSignalGauge(value, sampleSize) {
