@@ -1928,9 +1928,186 @@
                 gap: 8px !important;
             }
         }
+
+        /* ===== Full-Screen Initial Loading Overlay ===== */
+        #initial-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #05070b;
+            transition: opacity 0.6s ease;
+        }
+
+        .loader-backdrop {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 40%, rgba(41, 182, 246, 0.14) 0%, rgba(5, 7, 11, 0.92) 55%, #05070b 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .loader-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .loader-ring {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid rgba(41, 182, 246, 0.14);
+        }
+
+        .loader-ring::before,
+        .loader-ring::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--accent-blue);
+            animation: loader-spin 1.4s linear infinite;
+        }
+
+        .loader-ring::after {
+            inset: 12px;
+            border-top-color: var(--accent-gold);
+            animation-duration: 1s;
+            animation-direction: reverse;
+        }
+
+        .loader-ring-core {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            box-shadow: 0 0 14px 4px rgba(41, 182, 246, 0.55);
+            animation: loader-pulse 1.6s ease-in-out infinite;
+        }
+
+        #loading-status {
+            color: var(--text-main);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .loader-substatus {
+            min-height: 1em;
+            color: var(--text-muted);
+            font-size: 0.64rem;
+            letter-spacing: 0.4px;
+        }
+
+        .loader-progress-track {
+            width: 200px;
+            height: 3px;
+            overflow: hidden;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .loader-progress-glow {
+            width: 40%;
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-gold), transparent);
+            animation: loader-sweep 1.8s ease-in-out infinite;
+        }
+
+        .loader-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .loader-retry-btn,
+        .loader-continue-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .loader-retry-btn {
+            border: 1px solid rgba(255, 82, 82, 0.5);
+            background: rgba(255, 82, 82, 0.08);
+            color: #ff9a9a;
+        }
+
+        .loader-retry-btn:hover {
+            background: rgba(255, 82, 82, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .loader-continue-btn {
+            border: 1px solid var(--panel-border);
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .loader-continue-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            transform: translateY(-1px);
+        }
+
+        @keyframes loader-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes loader-pulse {
+            0%, 100% { transform: scale(0.85); opacity: 0.7; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        @keyframes loader-sweep {
+            0% { transform: translateX(-120%); }
+            100% { transform: translateX(320%); }
+        }
+
+        /* Smooth exit: fade out and disable interaction, then JS removes the node */
+        #initial-loader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== Full-Screen Initial Loading Overlay ===== -->
+<div id="initial-loader" role="status" aria-live="polite">
+    <div class="loader-backdrop"></div>
+    <div class="loader-content">
+        <div class="loader-ring">
+            <div class="loader-ring-core"></div>
+        </div>
+        <p id="loading-status">Initializing Dashboard...</p>
+        <div class="loader-progress-track">
+            <div class="loader-progress-glow"></div>
+        </div>
+        <p id="loading-substatus" class="loader-substatus">Preparing neural tick engine</p>
+        <div class="loader-actions">
+            <button id="loader-retry-btn" class="loader-retry-btn" type="button" onclick="AppLoader.retry()" hidden>Retry Connection</button>
+            <button id="loader-continue-btn" class="loader-continue-btn" type="button" onclick="AppLoader.dismiss()" hidden>Continue Offline</button>
+        </div>
+    </div>
+</div>
 
 <div class="app-wrapper">
     <!-- Top Header Navigation -->
@@ -2281,6 +2458,65 @@
 </div>
 
 <script>
+    // ===== Initial Loading Overlay Controller =====
+    // Stages: 1) assets, 2) connecting to live feed, 3) buffering data -> dismiss.
+    const AppLoader = (() => {
+        const el = document.getElementById('initial-loader');
+        const statusEl = document.getElementById('loading-status');
+        const subEl = document.getElementById('loading-substatus');
+        const retryBtn = document.getElementById('loader-retry-btn');
+        const continueBtn = document.getElementById('loader-continue-btn');
+        const SAFETY_TIMEOUT_MS = 8000;
+        let safetyTimer = null;
+        let dismissed = false;
+
+        const stages = {
+            1: { text: 'Loading application assets...', sub: 'Preparing neural tick engine' },
+            2: { text: 'Connecting to live tick feed...', sub: 'Reaching Deriv market servers' },
+            3: { text: 'Buffering initial tick data...', sub: 'Synchronizing the latest ticks' }
+        };
+
+        function setStage(stageNumber, customText) {
+            const stage = stages[stageNumber];
+            if (!stage || !el || dismissed) return;
+            if (statusEl) statusEl.innerText = customText || stage.text;
+            if (subEl) subEl.innerText = stage.sub;
+            armSafetyTimeout();
+        }
+
+        // If the feed hasn't connected within the safety window, offer a retry or an offline escape hatch instead of freezing.
+        function armSafetyTimeout() {
+            window.clearTimeout(safetyTimer);
+            if (retryBtn) retryBtn.hidden = true;
+            if (continueBtn) continueBtn.hidden = true;
+            safetyTimer = window.setTimeout(() => {
+                if (dismissed) return;
+                if (statusEl) statusEl.innerText = 'Connection is taking longer than expected.';
+                if (subEl) subEl.innerText = 'The live tick feed did not respond in time.';
+                if (retryBtn) retryBtn.hidden = false;
+                if (continueBtn) continueBtn.hidden = false;
+            }, SAFETY_TIMEOUT_MS);
+        }
+
+        function retry() {
+            setStage(2);
+            if (typeof loadDerivedMarkets === 'function') loadDerivedMarkets();
+        }
+
+        // Fades the overlay out, then removes it from the DOM once the transition ends.
+        function dismiss() {
+            if (dismissed || !el) return;
+            dismissed = true;
+            window.clearTimeout(safetyTimer);
+            el.classList.add('fade-out');
+            el.addEventListener('transitionend', () => el.remove(), { once: true });
+            window.setTimeout(() => el.remove(), 700); // fallback in case transitionend never fires
+        }
+
+        setStage(1);
+        return { setStage, dismiss, retry };
+    })();
+
     const API_BASE = 'https://api.derivws.com';
     const DEFAULT_PUBLIC_APP_ID = '1089';
     const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
@@ -2416,7 +2652,7 @@
         setMarketStatus(`${reason} Verifying available derived markets...`);
         const candidates = FALLBACK_DERIVED_MARKETS;
         const validMarkets = [];
-        let candidateIndex = 0;
+        let responsesReceived = 0;
         marketProbeSocket = new WebSocket(getPublicWebSocketUrl());
         const finish = () => {
             window.clearTimeout(marketProbeTimer);
@@ -2427,39 +2663,38 @@
                 if (!validMarkets.some(market => market.symbol === currentSymbol)) currentSymbol = validMarkets[0].symbol;
                 renderMarketOptions();
                 setMarketStatus(`${validMarkets.length} verified derived markets available from Deriv`);
+                AppLoader.setStage(3);
+                window.setTimeout(() => AppLoader.dismiss(), 500);
                 if (isAnalyzing) connectWebSocket();
             } else {
                 setMarketStatus('Deriv did not return a usable derived market. Retrying...');
                 window.setTimeout(loadDerivedMarkets, 10000);
             }
         };
-        const requestNext = () => {
-            if (candidateIndex >= candidates.length) {
-                finish();
-                return;
-            }
-            const candidate = candidates[candidateIndex++];
-            marketProbeSocket.send(JSON.stringify({
+        // Probe every fallback symbol in parallel instead of waiting on each response one-by-one.
+        marketProbeSocket.onopen = () => {
+            candidates.forEach((candidate, index) => marketProbeSocket.send(JSON.stringify({
                 ticks_history: candidate.symbol,
                 count: 1,
                 end: 'latest',
                 style: 'ticks',
-                req_id: 900 + candidateIndex
-            }));
+                req_id: 900 + index
+            })));
         };
-        marketProbeSocket.onopen = requestNext;
         marketProbeSocket.onmessage = event => {
             const data = JSON.parse(event.data);
-            if (!data.req_id || data.req_id < 901) return;
-            const candidate = candidates[data.req_id - 901];
+            if (data.req_id === undefined || data.req_id < 900) return;
+            const candidate = candidates[data.req_id - 900];
             if (candidate && data.msg_type === 'history' && data.history?.prices?.length) validMarkets.push(candidate);
-            requestNext();
+            responsesReceived++;
+            if (responsesReceived >= candidates.length) finish();
         };
         marketProbeSocket.onerror = finish;
         marketProbeTimer = window.setTimeout(finish, 15000);
     }
 
     function loadDerivedMarkets() {
+        AppLoader.setStage(2);
         if (marketDirectorySocket) marketDirectorySocket.close();
         marketDirectorySocket = new WebSocket(getPublicWebSocketUrl());
         marketDirectorySocket.onopen = () => marketDirectorySocket.send(JSON.stringify({
@@ -2476,12 +2711,14 @@
             if (data.msg_type !== 'active_symbols') return;
             const symbols = (data.active_symbols || []).filter(symbol => symbol.market === 'synthetic_index' && symbol.exchange_is_open !== 0);
             if (!symbols.length) {
-                setMarketStatus('Directory unavailable. Using direct derived-market connection.');
                 if (marketDirectorySocket) marketDirectorySocket.close();
+                probeFallbackMarkets('Directory returned no open derived markets.');
                 return;
             }
             derivedMarkets = symbols.sort((first, second) => `${first.submarket}${first.display_name}`.localeCompare(`${second.submarket}${second.display_name}`));
             renderMarketOptions();
+            AppLoader.setStage(3);
+            window.setTimeout(() => AppLoader.dismiss(), 500);
             marketDirectorySocket.close();
         };
         marketDirectorySocket.onerror = () => {
