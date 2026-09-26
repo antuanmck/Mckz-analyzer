@@ -158,6 +158,85 @@
             opacity: 0.75;
         }
 
+        .feed-connection-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            padding: 6px 9px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            background: rgba(13, 17, 23, 0.72);
+        }
+
+        .feed-connection-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-size: 0.58rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .feed-connection-state::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            flex: 0 0 7px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+
+        .feed-connection-control.is-live .feed-connection-state {
+            color: var(--accent-green);
+        }
+
+        .feed-connection-control.is-live .feed-connection-state::before {
+            background: var(--accent-green);
+            box-shadow: 0 0 8px rgba(0, 230, 118, 0.65);
+        }
+
+        .feed-connection-control.is-connecting .feed-connection-state::before {
+            background: var(--accent-gold);
+            box-shadow: 0 0 8px rgba(245, 192, 39, 0.45);
+            animation: feed-status-pulse 1s ease-in-out infinite;
+        }
+
+        .feed-connection-control.is-offline .feed-connection-state {
+            color: #ff9a9a;
+        }
+
+        .feed-connection-control.is-offline .feed-connection-state::before {
+            background: var(--accent-red);
+        }
+
+        .feed-retry-button {
+            border: 1px solid rgba(41, 182, 246, 0.35);
+            border-radius: 5px;
+            background: rgba(41, 182, 246, 0.08);
+            color: var(--accent-blue);
+            padding: 5px 8px;
+            font-size: 0.56rem;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .feed-retry-button:hover {
+            background: rgba(41, 182, 246, 0.16);
+        }
+
+        .feed-dependent[disabled] {
+            opacity: 0.48;
+            cursor: not-allowed;
+            filter: saturate(0.45);
+        }
+
+        @keyframes feed-status-pulse {
+            50% { opacity: 0.45; }
+        }
+
         .view-hidden {
             display: none !important;
         }
@@ -2105,6 +2184,11 @@
                 width: 100%;
             }
 
+            .feed-connection-control {
+                justify-content: space-between;
+                width: 100%;
+            }
+
             .method-tabs {
                 overflow-x: auto;
                 grid-template-columns: repeat(5, minmax(112px, 1fr));
@@ -2175,6 +2259,10 @@
                 flex-wrap: wrap;
                 gap: 8px;
                 padding: 8px;
+            }
+
+            .feed-connection-control {
+                flex-wrap: wrap;
             }
 
             .header-account .operations-account-select {
@@ -2381,6 +2469,10 @@
             <button id="home-nav" class="active" type="button" onclick="showView('home')">HOME</button>
             <button id="analyzer-nav" type="button" onclick="showView('analyzer')">ANALYZER</button>
         </nav>
+        <div id="feed-connection-control" class="feed-connection-control is-connecting" role="status" aria-live="polite">
+            <span id="feed-connection-state" class="feed-connection-state">CONNECTING</span>
+            <button id="feed-retry-button" class="feed-retry-button" type="button" onclick="retryFeedConnection()" hidden>RETRY</button>
+        </div>
         <div id="header-account" class="header-account" aria-label="Connected Deriv account">
             <span id="header-account-state" class="header-account-state">NOT CONNECTED</span>
             <select id="account-select" class="operations-account-select" disabled aria-label="Deriv account selector" onchange="switchAccount(this.value)">
@@ -2744,11 +2836,11 @@
                 <!-- Sticky execution actions -->
                 <div class="gc-sticky-actions">
                     <div class="trade-actions">
-                        <button class="btn-secondary gc-action-manual" onclick="manualTrade()">MANUAL TRADE</button>
-                        <button class="btn-secondary gc-action-start" onclick="startAutoTrading()">START AUTO</button>
-                        <button class="btn-secondary gc-action-stop" onclick="stopAutoTrading()">STOP AUTO</button>
+                        <button class="btn-secondary gc-action-manual feed-dependent" onclick="manualTrade()">MANUAL TRADE</button>
+                        <button class="btn-secondary gc-action-start feed-dependent" onclick="startAutoTrading()">START AUTO</button>
+                        <button class="btn-secondary gc-action-stop feed-dependent" onclick="stopAutoTrading()">STOP AUTO</button>
                     </div>
-                    <button id="confirm-trade" class="confirm-trade" onclick="confirmTrade()">CONFIRM BUY ORDER</button>
+                    <button id="confirm-trade" class="confirm-trade feed-dependent" onclick="confirmTrade()">CONFIRM BUY ORDER</button>
                 </div>
             </div>
 
@@ -2863,7 +2955,12 @@
 
         function retry() {
             setStage(2);
-            if (typeof loadDerivedMarkets === 'function') loadDerivedMarkets();
+            const dismissOnDomReady = () => dismiss();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', dismissOnDomReady, { once: true });
+            } else {
+                queueMicrotask(dismissOnDomReady);
+            }
             if (isAnalyzing && typeof connectWebSocket === 'function') connectWebSocket();
         }
 
@@ -2872,6 +2969,7 @@
             if (dismissed || !el) return;
             dismissed = true;
             window.clearTimeout(safetyTimer);
+            document.body.classList.remove('loader-active');
             el.classList.add('loader-hidden');
             const removeLoader = () => {
                 el.remove();
@@ -2882,7 +2980,12 @@
         }
 
         setStage(1);
-        window.addEventListener('load', () => setStage(1), { once: true });
+        const dismissWhenDomReady = () => dismiss();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', dismissWhenDomReady, { once: true });
+        } else {
+            queueMicrotask(dismissWhenDomReady);
+        }
         return { setStage, showFallback, dismiss, retry };
     })();
 
@@ -2890,6 +2993,7 @@
     const DEFAULT_PUBLIC_APP_ID = '34vidk2XqsTzd9Jslqpso';
     const PUBLIC_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
     let ws = null;
+    let liveFeedReady = false;
     let activeAccountId = null;
     let authenticatedReconnectAttempts = 0;
     let authenticatedReconnectTimer = null;
@@ -2954,6 +3058,42 @@
         const exponent = Math.min(Math.max(0, attempt - 1), 7);
         const baseDelay = Math.min(120000, 1000 * (2 ** exponent));
         return Math.round(baseDelay * (0.8 + Math.random() * 0.4));
+    }
+
+    function setFeedConnectionState(state, detail = '') {
+        const control = document.getElementById('feed-connection-control');
+        const label = document.getElementById('feed-connection-state');
+        const retryButton = document.getElementById('feed-retry-button');
+        const statusBadge = document.getElementById('status-badge');
+        liveFeedReady = state === 'live';
+
+        if (control) control.className = `feed-connection-control is-${state}`;
+        if (label) label.innerText = state === 'live' ? 'LIVE' : state === 'connecting' ? 'CONNECTING' : state === 'stopped' ? 'STOPPED' : 'OFFLINE / RETRYING';
+        if (retryButton) retryButton.hidden = state === 'live' || state === 'connecting';
+        document.querySelectorAll('.feed-dependent').forEach(button => { button.disabled = !liveFeedReady; });
+
+        if (statusBadge) {
+            statusBadge.innerText = state === 'live' ? 'STATUS: CONNECTED' : state === 'connecting' ? 'STATUS: CONNECTING' : state === 'stopped' ? 'STATUS: READY' : 'STATUS: RECONNECTING';
+            statusBadge.className = `pill-badge ${state === 'live' ? 'status-live' : state === 'connecting' ? 'status-idle' : 'status-idle'}`;
+        }
+
+        const homeStatus = document.getElementById('home-market-status');
+        const homeDetail = document.getElementById('home-market-detail');
+        if (homeStatus) {
+            homeStatus.innerText = state === 'live' ? 'CONNECTED' : state === 'connecting' ? 'CONNECTING' : state === 'stopped' ? 'STOPPED' : 'RETRYING';
+            homeStatus.style.color = state === 'live' ? 'var(--accent-green)' : state === 'offline' ? 'var(--accent-red)' : 'var(--accent-gold)';
+        }
+        if (homeDetail && detail) homeDetail.innerText = detail;
+    }
+
+    function retryFeedConnection() {
+        if (isAnalyzing) {
+            window.clearTimeout(reconnectTimer);
+            reconnectAttempts = 0;
+            connectWebSocket();
+            return;
+        }
+        toggleEngine();
     }
 
     const FALLBACK_DERIVED_MARKETS = [
@@ -3065,7 +3205,7 @@
         let opened = false;
         const connectionTimeout = window.setTimeout(() => {
             if (!opened) socket.close();
-        }, 10000);
+        }, 5000);
         setActiveSocket(socket);
 
         socket.onopen = event => {
@@ -3130,15 +3270,13 @@
             btn.innerText = 'STOP ANALYSIS';
             btn.style.background = '#ff5252';
             btn.style.color = '#ffffff';
-            statusBadge.innerText = 'STATUS: CONNECTING';
-            statusBadge.className = 'pill-badge status-live';
+            setFeedConnectionState('connecting', `Connecting to ${currentSymbol}...`);
             connectWebSocket();
         } else {
             btn.innerText = 'START ANALYSIS';
             btn.style.background = '#ffffff';
             btn.style.color = '#000000';
-            statusBadge.innerText = 'STATUS: READY';
-            statusBadge.className = 'pill-badge status-idle';
+            setFeedConnectionState('stopped', 'Market stream stopped. Navigation and settings remain available.');
             window.clearTimeout(reconnectTimer);
             if (ws) {
                 if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ forget_all: 'ticks' }));
@@ -3225,7 +3363,6 @@
     }
 
     function loadDerivedMarkets() {
-        AppLoader.setStage(2);
         setMarketStatus('Connecting to Deriv market directory...');
         if (marketDirectorySocket) marketDirectorySocket.close();
         openPublicSocket(socket => { marketDirectorySocket = socket; }, {
@@ -3267,7 +3404,6 @@
 
     function setMarketStatus(message) {
         const status = document.getElementById('market-status');
-        const homeStatus = document.getElementById('home-market-status');
         const homeDetail = document.getElementById('home-market-detail');
         const homeCount = document.getElementById('home-market-count');
         if (!status) return;
@@ -3275,10 +3411,6 @@
         const state = /error|unable|no open|failed/i.test(message) ? 'error' : /loading|retry|connecting|fetching|verifying|waiting/i.test(message) ? 'loading' : 'ready';
         status.className = `market-status ${state}`;
         status.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
-        if (homeStatus) {
-            homeStatus.innerText = state === 'ready' ? 'CONNECTED' : state === 'error' ? 'RETRYING' : 'INITIALIZING';
-            homeStatus.style.color = state === 'ready' ? 'var(--accent-green)' : state === 'error' ? 'var(--accent-red)' : 'var(--accent-gold)';
-        }
         if (homeDetail) homeDetail.innerText = message;
         if (homeCount && derivedMarkets.length) homeCount.innerText = `${derivedMarkets.length} derived markets available for public live data.`;
     }
@@ -3913,7 +4045,7 @@
     }
 
     function connectWebSocket() {
-        AppLoader.setStage(2);
+        setFeedConnectionState('connecting', `Connecting to ${currentSymbol}...`);
         setMarketStatus(`Connecting to ${currentSymbol}...`);
         if (!derivedMarkets.length) {
             derivedMarkets = FALLBACK_DERIVED_MARKETS.slice();
@@ -3935,7 +4067,7 @@
         onopen: () => {
             window.clearTimeout(marketConnectionTimer);
             window.clearTimeout(reconnectTimer);
-            document.getElementById('status-badge').innerText = 'STATUS: LOADING HISTORY';
+            setFeedConnectionState('connecting', `Connected. Waiting for live ticks from ${currentSymbol}...`);
             setMarketStatus(`Connected to Deriv. Loading ${currentSymbol} history...`);
             try {
                 connection.send(JSON.stringify({
@@ -3997,11 +4129,9 @@
                 if (errorCode === 'InvalidToken' || /invalid application|application (?:token|id)|app(?:lication)?[_ -]?id/i.test(errorMessage)) {
                     console.warn(`[Deriv] Public feed App ID ${getConfiguredPublicAppId()} was rejected: ${errorMessage}`);
                 }
-                document.getElementById('status-badge').innerText = 'STATUS: DATA ERROR';
-                document.getElementById('status-badge').className = 'pill-badge status-idle';
                 setPastDataState('error', 'LIVE DATA ERROR', errorMessage);
                 setHint(`API ERROR: ${errorMessage}`);
-                AppLoader.showFallback(`Deriv API error: ${errorMessage}`);
+                setFeedConnectionState('offline', `Market feed error: ${errorMessage}`);
                 connection.close();
                 return;
             }
@@ -4009,8 +4139,7 @@
                 const prices = (data.history?.prices || []).map(Number).filter(Number.isFinite);
                 if (prices.length) {
                     reconnectAttempts = 0;
-                    AppLoader.setStage(3);
-                    AppLoader.dismiss();
+                    setFeedConnectionState('live', `Live market data connected to ${currentSymbol}.`);
                 }
                 if (prices.length) window.clearTimeout(marketConnectionTimer);
                 const times = data.history?.times || [];
@@ -4032,8 +4161,7 @@
                 }
                 window.clearTimeout(marketConnectionTimer);
                 reconnectAttempts = 0;
-                AppLoader.setStage(3);
-                AppLoader.dismiss();
+                setFeedConnectionState('live', `Live market data connected to ${currentSymbol}.`);
                 if (Number(data.tick?.epoch) && Number(data.tick.epoch) <= lastTickAt) return;
                 tickHistory.push(quote);
                 tickHistory = tickHistory.slice(-BUFFER_LIMITS.macro);
@@ -4044,16 +4172,14 @@
             }
         },
         onerror: () => {
-            document.getElementById('status-badge').innerText = 'STATUS: CONNECTION ERROR';
-            document.getElementById('status-badge').className = 'pill-badge status-idle';
             setPastDataState('error', 'LIVE DATA UNAVAILABLE', 'Check the Deriv connection and try again.');
             setHint('API ERROR: Unable to reach Deriv market data.');
-            AppLoader.showFallback('Connection error. Retrying the Deriv stream...');
+            setFeedConnectionState('offline', 'Deriv is unavailable. Retrying in the background.');
             if (connection && connection.readyState !== WebSocket.CLOSED) connection.close();
             else if (isAnalyzing) {
                 reconnectAttempts++;
                 const delay = getReconnectDelay(reconnectAttempts);
-                document.getElementById('status-badge').innerText = 'STATUS: RECONNECTING';
+                setFeedConnectionState('offline', `Socket unavailable. Retrying in ${Math.ceil(delay / 1000)}s.`);
                 setHint(`Could not create the market socket. Retrying in ${Math.ceil(delay / 1000)}s (attempt ${reconnectAttempts}).`);
                 reconnectTimer = window.setTimeout(connectWebSocket, delay);
             }
@@ -4065,14 +4191,14 @@
             window.clearTimeout(reconnectTimer);
             marketPollingTimer = null;
             ws = null;
-            AppLoader.showFallback('Market connection closed. Retrying stream...');
             if (isAnalyzing) {
-                document.getElementById('status-badge').innerText = 'STATUS: RECONNECTING';
-                document.getElementById('status-badge').className = 'pill-badge status-idle';
                 reconnectAttempts++;
                 const delay = getReconnectDelay(reconnectAttempts);
+                setFeedConnectionState('offline', `Market disconnected. Retrying in ${Math.ceil(delay / 1000)}s.`);
                 setHint(`Market connection closed. Reconnecting in ${Math.ceil(delay / 1000)}s (attempt ${reconnectAttempts}).`);
                 reconnectTimer = window.setTimeout(connectWebSocket, delay);
+            } else {
+                setFeedConnectionState('stopped', 'Market stream stopped.');
             }
         }
         });
@@ -4082,8 +4208,7 @@
         if (!tickHistory.length) return;
 
         if (isAnalyzing) {
-            document.getElementById('status-badge').innerText = 'STATUS: CONNECTED';
-            document.getElementById('status-badge').className = 'pill-badge status-live';
+            setFeedConnectionState('live', `Live market data connected to ${currentSymbol}.`);
             setMarketStatus(`Live data connected to ${currentSymbol}`);
         }
 
